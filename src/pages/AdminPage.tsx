@@ -1,10 +1,57 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { 
   Shield, PlusCircle, Gamepad2, Newspaper, Database, CheckCircle, 
-  ExternalLink, Image, Video, Edit3, Trash2, X, Sparkles, DownloadCloud, RefreshCw
+  ExternalLink, Image as ImageIcon, Video, Edit3, Trash2, X, Sparkles, 
+  DownloadCloud, RefreshCw, Upload, FileImage
 } from 'lucide-react';
 import { Game, NewsArticle, WikiItem } from '../types';
+
+// Helper to convert & optimize file from computer to Base64
+const processImageFile = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    if (!file.type.startsWith('image/')) {
+      reject(new Error('Faqat rasm yuklash mumkin!'));
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 1200;
+        const MAX_HEIGHT = 800;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+        // Optimize to JPEG with 82% quality (crisp yet small footprint)
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+        resolve(dataUrl);
+      };
+      img.onerror = () => reject(new Error('Rasm ochishda xatolik!'));
+      img.src = event.target?.result as string;
+    };
+    reader.onerror = () => reject(new Error('Faylni o\'qishda xatolik!'));
+    reader.readAsDataURL(file);
+  });
+};
 
 export const AdminPage: React.FC = () => {
   const { 
@@ -15,9 +62,15 @@ export const AdminPage: React.FC = () => {
     importGameFromSource 
   } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'games' | 'news' | 'wiki' | 'import'>('games');
+  const [activeTab, setActiveTab] = useState<'games' | 'news' | 'wiki' | 'import'>('news');
   const [successMessage, setSuccessMessage] = useState<string>('');
   const [isImporting, setIsImporting] = useState<boolean>(false);
+
+  // File input refs
+  const newsFileInputRef = useRef<HTMLInputElement>(null);
+  const editNewsFileInputRef = useRef<HTMLInputElement>(null);
+  const gameFileInputRef = useRef<HTMLInputElement>(null);
+  const editGameFileInputRef = useRef<HTMLInputElement>(null);
 
   // ----------------------------------------------------
   // Edit State Modals
@@ -33,7 +86,7 @@ export const AdminPage: React.FC = () => {
   const [gameYear, setGameYear] = useState('2024');
   const [gameDeveloper, setGameDeveloper] = useState('');
   const [gameGenres, setGameGenres] = useState('Survival, Action, Open World');
-  const [gameCover, setGameCover] = useState('https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=800&q=80');
+  const [gameCover, setGameCover] = useState<string>('');
   const [gameSourceUrl, setGameSourceUrl] = useState('');
   const [gameTaglineUz, setGameTaglineUz] = useState('');
   const [gameDescUz, setGameDescUz] = useState('');
@@ -44,7 +97,7 @@ export const AdminPage: React.FC = () => {
   const [newsTitleUz, setNewsTitleUz] = useState('');
   const [newsSummaryUz, setNewsSummaryUz] = useState('');
   const [newsContentUz, setNewsContentUz] = useState('');
-  const [newsCover, setNewsCover] = useState('https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80');
+  const [newsCover, setNewsCover] = useState<string>('');
   const [newsVideoUrl, setNewsVideoUrl] = useState('');
   const [newsGameId, setNewsGameId] = useState('raft');
   const [newsTags, setNewsTags] = useState('Patch, Reliz, O\'yinlar');
@@ -74,6 +127,23 @@ export const AdminPage: React.FC = () => {
     setTimeout(() => setSuccessMessage(''), 4500);
   };
 
+  // Handle file uploads from computer
+  const handleFileUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    setter: (val: string) => void
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const base64Url = await processImageFile(file);
+      setter(base64Url);
+      showNotification("Rasm kompyuterdan muvaffaqiyatli yuklandi!");
+    } catch (err: any) {
+      alert(err.message || "Rasm yuklashda xatolik yuz berdi");
+    }
+  };
+
   // ----------------------------------------------------
   // Handlers: Create
   // ----------------------------------------------------
@@ -86,13 +156,14 @@ export const AdminPage: React.FC = () => {
       releaseYear: gameYear,
       developer: gameDeveloper || "Noma'lum",
       genre: gameGenres.split(',').map((g) => g.trim()),
-      coverImage: gameCover,
+      coverImage: gameCover || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=800&q=80',
       sourceUrl: gameSourceUrl.trim() || undefined,
       tagline: { uz: gameTaglineUz || gameName, ru: gameName, en: gameName },
       description: { uz: gameDescUz || '', ru: '', en: '' },
     });
 
     setGameName('');
+    setGameCover('');
     setGameTaglineUz('');
     setGameDescUz('');
     setGameSourceUrl('');
@@ -107,7 +178,7 @@ export const AdminPage: React.FC = () => {
       title: { uz: newsTitleUz, ru: newsTitleUz, en: newsTitleUz },
       summary: { uz: newsSummaryUz, ru: newsSummaryUz, en: newsSummaryUz },
       content: { uz: newsContentUz, ru: newsContentUz, en: newsContentUz },
-      coverImage: newsCover,
+      coverImage: newsCover || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80',
       videoUrl: newsVideoUrl.trim() || undefined,
       gameId: newsGameId,
       tags: newsTags.split(',').map((t) => t.trim()),
@@ -117,6 +188,7 @@ export const AdminPage: React.FC = () => {
     setNewsTitleUz('');
     setNewsSummaryUz('');
     setNewsContentUz('');
+    setNewsCover('');
     setNewsVideoUrl('');
     showNotification("Yangilik muvaffaqiyatli chop etildi!");
   };
@@ -145,9 +217,6 @@ export const AdminPage: React.FC = () => {
     showNotification("Wiki buyumi muvaffaqiyatli qo'shildi!");
   };
 
-  // ----------------------------------------------------
-  // Handler: Smart Source Auto-Import
-  // ----------------------------------------------------
   const handleAutoImport = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!importUrl.trim()) return;
@@ -165,16 +234,13 @@ export const AdminPage: React.FC = () => {
     }
   };
 
-  // ----------------------------------------------------
-  // Handlers: Save Updates
-  // ----------------------------------------------------
   const handleSaveNewsEdit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingNews) return;
 
     updateNews(editingNews.id, editingNews);
     setEditingNews(null);
-    showNotification("Maqola muvaffaqiyatli tahrirlandi va yangilandi!");
+    showNotification("Maqola muvaffaqiyatli tahrirlandi!");
   };
 
   const handleSaveGameEdit = (e: React.FormEvent) => {
@@ -209,11 +275,11 @@ export const AdminPage: React.FC = () => {
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl font-black text-white">Boshqaruv Paneli (Admin CMS)</h1>
                 <span className="text-[10px] font-bold bg-[#00e5ff]/20 text-[#00e5ff] px-2 py-0.5 rounded">
-                  To'liq Tahrirlash & Import
+                  Kompyuterdan Rasm Yuklash
                 </span>
               </div>
               <p className="text-slate-400 text-xs mt-0.5">
-                Barcha postlar, yangiliklar va o'yinlarni qo'shish, tahrirlash hamda manbadan avtomatik yuklash.
+                Maqolalarga to'g'ridan-to'g'ri kompyuterdan rasm yuklash, postlarni tahrirlash va manbadan avtomatik import qilish.
               </p>
             </div>
           </div>
@@ -234,18 +300,6 @@ export const AdminPage: React.FC = () => {
         {/* Tab Switcher */}
         <div className="flex flex-wrap gap-2 border-b border-white/10 pb-2">
           <button
-            onClick={() => setActiveTab('import')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
-              activeTab === 'import'
-                ? 'bg-[#00e5ff] text-[#070e17] shadow-lg shadow-[#00e5ff]/20'
-                : 'bg-[#0b1424] text-[#00e5ff] hover:bg-white/5 border border-[#00e5ff]/30'
-            }`}
-          >
-            <DownloadCloud className="w-4 h-4" />
-            <span>⚡ Istochnikdan Avtomatik Yuklash</span>
-          </button>
-
-          <button
             onClick={() => setActiveTab('news')}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
               activeTab === 'news'
@@ -254,7 +308,7 @@ export const AdminPage: React.FC = () => {
             }`}
           >
             <Newspaper className="w-4 h-4" />
-            <span>Postlar & Yangiliklar ({news.length})</span>
+            <span>1. Postlar & Yangiliklar ({news.length})</span>
           </button>
 
           <button
@@ -266,7 +320,7 @@ export const AdminPage: React.FC = () => {
             }`}
           >
             <Gamepad2 className="w-4 h-4" />
-            <span>O'yinlar ({games.length})</span>
+            <span>2. O'yinlar ({games.length})</span>
           </button>
 
           <button
@@ -278,99 +332,24 @@ export const AdminPage: React.FC = () => {
             }`}
           >
             <Database className="w-4 h-4" />
-            <span>Wiki Buyumlar & Retseptlar</span>
+            <span>3. Wiki Buyumlar & Retseptlar</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('import')}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+              activeTab === 'import'
+                ? 'bg-[#00e5ff] text-[#070e17] shadow-lg shadow-[#00e5ff]/20'
+                : 'bg-[#0b1424] text-[#00e5ff] hover:bg-white/5 border border-[#00e5ff]/30'
+            }`}
+          >
+            <DownloadCloud className="w-4 h-4" />
+            <span>⚡ Istochnikdan Avtomatik Yuklash</span>
           </button>
         </div>
 
         {/* ========================================================= */}
-        {/* TAB: AUTO-IMPORTER (Fandom / Source URL to Database)     */}
-        {/* ========================================================= */}
-        {activeTab === 'import' && (
-          <div className="bg-[#0b1424] border border-[#00e5ff]/40 rounded-2xl p-6 space-y-6">
-            <div className="flex items-center justify-between border-b border-white/10 pb-4">
-              <div>
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-[#00e5ff]" />
-                  <span>Istochnik (Manba) Ssilkasidan Ma'lumotlarni Avtomatik Yuklash</span>
-                </h2>
-                <p className="text-xs text-slate-400 mt-1">
-                  Har qanday Fandom Wiki (masalan: <code>https://raft.fandom.com</code>, <code>https://rust.fandom.com</code>) ssilkasini kiritsangiz, tizim o'sha o'yinning barcha retseptlari, xaritalari va parametrlarini avtomatik bazaga qo'shadi!
-                </p>
-              </div>
-            </div>
-
-            <form onSubmit={handleAutoImport} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="sm:col-span-2">
-                  <label className="text-xs font-bold text-[#00e5ff] block mb-1">
-                    Istochnik Sayt Ssilkasi (Fandom Wiki URL) *
-                  </label>
-                  <input
-                    type="url"
-                    required
-                    value={importUrl}
-                    onChange={(e) => setImportUrl(e.target.value)}
-                    placeholder="https://raft.fandom.com yoki https://theforest.fandom.com"
-                    className="w-full bg-[#070e17] border border-[#00e5ff]/30 focus:border-[#00e5ff] rounded-xl px-4 py-3 text-xs text-white outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-300 block mb-1">
-                    O'yin Nomi (Ixtiyoriy)
-                  </label>
-                  <input
-                    type="text"
-                    value={importGameTitle}
-                    onChange={(e) => setImportGameTitle(e.target.value)}
-                    placeholder="Avtomatik aniqlanadi..."
-                    className="w-full bg-[#070e17] border border-white/10 focus:border-[#00e5ff] rounded-xl px-4 py-3 text-xs text-white outline-none"
-                  />
-                </div>
-              </div>
-
-              {/* Quick sample chips */}
-              <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400">
-                <span>Tezkor namunalar:</span>
-                <button
-                  type="button"
-                  onClick={() => setImportUrl('https://raft.fandom.com')}
-                  className="bg-white/5 hover:bg-white/10 text-[#00e5ff] px-2.5 py-1 rounded-lg border border-white/10"
-                >
-                  🌊 Raft Fandom Wiki
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setImportUrl('https://rust.fandom.com')}
-                  className="bg-white/5 hover:bg-white/10 text-amber-400 px-2.5 py-1 rounded-lg border border-white/10"
-                >
-                  🏹 Rust Fandom Wiki
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setImportUrl('https://theforest.fandom.com')}
-                  className="bg-white/5 hover:bg-white/10 text-emerald-400 px-2.5 py-1 rounded-lg border border-white/10"
-                >
-                  🌲 The Forest Fandom Wiki
-                </button>
-              </div>
-
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  disabled={isImporting}
-                  className="bg-[#00e5ff] hover:bg-[#38bdf8] text-[#070e17] font-black text-xs px-6 py-3 rounded-xl transition-all shadow-lg shadow-[#00e5ff]/20 flex items-center gap-2"
-                >
-                  {isImporting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <DownloadCloud className="w-4 h-4" />}
-                  <span>{isImporting ? "Yuklanmoqda..." : "Ushbu Manbadan Saytga Ma'lumotlarni Qo'shish"}</span>
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {/* ========================================================= */}
-        {/* TAB 1: NEWS & POSTS MANAGEMENT (Add, List, Edit, Delete) */}
+        {/* TAB 1: NEWS (Add with Local File Upload, Edit, Delete)   */}
         {/* ========================================================= */}
         {activeTab === 'news' && (
           <div className="space-y-8">
@@ -378,7 +357,7 @@ export const AdminPage: React.FC = () => {
             <form onSubmit={handleCreateNews} className="bg-[#0b1424] border border-white/10 rounded-2xl p-6 space-y-6">
               <h2 className="text-lg font-bold text-white flex items-center gap-2">
                 <PlusCircle className="w-5 h-5 text-[#00e5ff]" />
-                <span>Yangi Post / Maqola / Video Qo'shish</span>
+                <span>Yangi Post / Maqola Yaratish</span>
               </h2>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -402,43 +381,83 @@ export const AdminPage: React.FC = () => {
                     type="text"
                     value={newsAuthor}
                     onChange={(e) => setNewsAuthor(e.target.value)}
-                    className="w-full bg-[#070e17] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-[#00e5ff]"
+                    className="w-full bg-[#070e17] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none"
                   />
                 </div>
               </div>
 
-              {/* Media */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs font-bold text-slate-300 flex items-center gap-1.5 mb-1">
-                    <Image className="w-3.5 h-3.5 text-[#00e5ff]" />
-                    <span>Muqova Rasmi URL *</span>
-                  </label>
-                  <input
-                    type="url"
-                    required
-                    value={newsCover}
-                    onChange={(e) => setNewsCover(e.target.value)}
-                    className="w-full bg-[#070e17] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-[#00e5ff]"
-                  />
-                </div>
+              {/* LOCAL FILE UPLOADER FOR IMAGE (NO URL REQUIRED!) */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-[#00e5ff] flex items-center gap-1.5">
+                  <Upload className="w-4 h-4" />
+                  <span>Maqola Rasmi (Kompyuteringizdan Fayl Tanlang)</span>
+                </label>
 
-                <div>
-                  <label className="text-xs font-bold text-slate-300 flex items-center gap-1.5 mb-1">
-                    <Video className="w-3.5 h-3.5 text-[#ff4655]" />
-                    <span>Video Ssilka (YouTube Embed, ixtiyoriy)</span>
-                  </label>
-                  <input
-                    type="url"
-                    value={newsVideoUrl}
-                    onChange={(e) => setNewsVideoUrl(e.target.value)}
-                    placeholder="https://www.youtube.com/embed/..."
-                    className="w-full bg-[#070e17] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-[#00e5ff]"
-                  />
+                {/* Hidden File Input */}
+                <input
+                  type="file"
+                  ref={newsFileInputRef}
+                  accept="image/*"
+                  onChange={(e) => handleFileUpload(e, setNewsCover)}
+                  className="hidden"
+                />
+
+                {/* Drag & Drop / Click Upload Box */}
+                <div
+                  onClick={() => newsFileInputRef.current?.click()}
+                  className="border-2 border-dashed border-[#00e5ff]/30 hover:border-[#00e5ff] bg-[#070e17] rounded-2xl p-6 text-center cursor-pointer transition-all group"
+                >
+                  {newsCover ? (
+                    <div className="space-y-3">
+                      <div className="relative inline-block rounded-xl overflow-hidden max-h-56 shadow-lg border border-white/20">
+                        <img src={newsCover} alt="Preview" className="max-h-56 object-contain" />
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setNewsCover('');
+                          }}
+                          className="absolute top-2 right-2 bg-black/70 hover:bg-red-600 text-white p-1 rounded-full text-xs transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <div className="text-xs text-[#00e5ff] font-bold">
+                        ✔ Rasm yuklandi. Boshqasini tanlash uchun ustiga bosing.
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="w-12 h-12 rounded-full bg-[#00e5ff]/10 text-[#00e5ff] flex items-center justify-center mx-auto group-hover:scale-110 transition-transform">
+                        <FileImage className="w-6 h-6" />
+                      </div>
+                      <div className="text-sm font-bold text-white">
+                        Kompyuterdan rasm tanlash uchun bu yerga bosing
+                      </div>
+                      <div className="text-xs text-slate-400">
+                        PNG, JPG, WEBP formatlar (Avtomatik optimizatsiya qilinadi)
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {/* Content */}
+              {/* Optional Video Link */}
+              <div>
+                <label className="text-xs font-bold text-slate-300 flex items-center gap-1.5 mb-1">
+                  <Video className="w-3.5 h-3.5 text-[#ff4655]" />
+                  <span>Video Ssilka (YouTube Embed, ixtiyoriy)</span>
+                </label>
+                <input
+                  type="url"
+                  value={newsVideoUrl}
+                  onChange={(e) => setNewsVideoUrl(e.target.value)}
+                  placeholder="https://www.youtube.com/embed/..."
+                  className="w-full bg-[#070e17] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-[#00e5ff]"
+                />
+              </div>
+
+              {/* Title & Texts */}
               <div className="space-y-3">
                 <div>
                   <label className="text-xs font-bold text-slate-300 block mb-1">Sarlavha (Title) *</label>
@@ -447,7 +466,7 @@ export const AdminPage: React.FC = () => {
                     required
                     value={newsTitleUz}
                     onChange={(e) => setNewsTitleUz(e.target.value)}
-                    placeholder="Sarlavha..."
+                    placeholder="Maqola sarlavhasi..."
                     className="w-full bg-[#070e17] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-[#00e5ff]"
                   />
                 </div>
@@ -483,7 +502,7 @@ export const AdminPage: React.FC = () => {
               </button>
             </form>
 
-            {/* List of Existing Posts (With Edit and Delete Buttons) */}
+            {/* Existing Posts List (With Edit and Delete) */}
             <div className="bg-[#0b1424] border border-white/10 rounded-2xl p-6 space-y-4">
               <h3 className="text-base font-bold text-white flex items-center justify-between">
                 <span>Mavjud Postlar Ro'yxati ({news.length})</span>
@@ -540,15 +559,14 @@ export const AdminPage: React.FC = () => {
         )}
 
         {/* ========================================================= */}
-        {/* TAB 2: GAMES MANAGEMENT (Add, List, Edit, Delete)        */}
+        {/* TAB 2: GAMES (With Local File Upload, Edit, Delete)       */}
         {/* ========================================================= */}
         {activeTab === 'games' && (
           <div className="space-y-8">
-            {/* Create Game Form */}
             <form onSubmit={handleCreateGame} className="bg-[#0b1424] border border-white/10 rounded-2xl p-6 space-y-6">
               <h2 className="text-lg font-bold text-white flex items-center gap-2">
                 <PlusCircle className="w-5 h-5 text-[#00e5ff]" />
-                <span>Yangi O'yinni Qo'shish</span>
+                <span>Yangi O'yin Qo'shish</span>
               </h2>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -595,11 +613,41 @@ export const AdminPage: React.FC = () => {
                 </div>
               </div>
 
+              {/* Local File Upload for Game Cover */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-[#00e5ff] flex items-center gap-1.5">
+                  <Upload className="w-4 h-4" />
+                  <span>O'yin Muqova Rasmi (Kompyuteringizdan Yuklang)</span>
+                </label>
+                <input
+                  type="file"
+                  ref={gameFileInputRef}
+                  accept="image/*"
+                  onChange={(e) => handleFileUpload(e, setGameCover)}
+                  className="hidden"
+                />
+                <div
+                  onClick={() => gameFileInputRef.current?.click()}
+                  className="border-2 border-dashed border-white/15 hover:border-[#00e5ff] bg-[#070e17] rounded-xl p-4 text-center cursor-pointer transition-all"
+                >
+                  {gameCover ? (
+                    <div className="flex items-center justify-center gap-3">
+                      <img src={gameCover} alt="Cover" className="h-16 w-24 object-cover rounded-lg border border-white/20" />
+                      <span className="text-xs text-[#00e5ff] font-bold">Rasm yuklandi. O'zgartirish uchun bosing.</span>
+                    </div>
+                  ) : (
+                    <div className="text-xs text-slate-400">
+                      Kompyuterdan o'yin rasmini yuklash uchun bosing
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {/* Source URL with auto-import hint */}
               <div className="bg-[#070e17] border border-[#00e5ff]/20 p-4 rounded-xl space-y-2">
                 <label className="text-xs font-bold text-[#00e5ff] flex items-center gap-1.5">
                   <ExternalLink className="w-3.5 h-3.5" />
-                  <span>Istochnik / Manba Sayt Ssilkasi (Ixtiyoriy, Majburiy Emas)</span>
+                  <span>Istochnik / Manba Sayt Ssilkasi (Ixtiyoriy)</span>
                 </label>
                 <input
                   type="url"
@@ -622,7 +670,7 @@ export const AdminPage: React.FC = () => {
             <div className="bg-[#0b1424] border border-white/10 rounded-2xl p-6 space-y-4">
               <h3 className="text-base font-bold text-white flex items-center justify-between">
                 <span>Mavjud O'yinlar ({games.length})</span>
-                <span className="text-xs text-slate-400 font-normal">O'yin ma'lumotlarini o'zgartirish yoki manbasini yangilash</span>
+                <span className="text-xs text-slate-400 font-normal">Tahrirlash yoki o'chirish</span>
               </h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -637,11 +685,6 @@ export const AdminPage: React.FC = () => {
                         <h4 className="text-sm font-bold text-white">{game.name}</h4>
                         <div className="text-[10px] text-slate-400">{game.releaseYear} • {game.developer}</div>
                         <div className="text-[10px] text-[#00e5ff] mt-0.5">{game.items?.length || 0} ta maqola</div>
-                        {game.sourceUrl && (
-                          <div className="text-[10px] text-slate-500 truncate max-w-[200px]">
-                            🔗 {game.sourceUrl}
-                          </div>
-                        )}
                       </div>
                     </div>
 
@@ -675,15 +718,14 @@ export const AdminPage: React.FC = () => {
         )}
 
         {/* ========================================================= */}
-        {/* TAB 3: WIKI ITEMS & RECIPES (Add, List, Edit, Delete)     */}
+        {/* TAB 3: WIKI (Add, List, Edit, Delete)                     */}
         {/* ========================================================= */}
         {activeTab === 'wiki' && (
           <div className="space-y-8">
-            {/* Create Item Form */}
             <form onSubmit={handleCreateWikiItem} className="bg-[#0b1424] border border-white/10 rounded-2xl p-6 space-y-6">
               <h2 className="text-lg font-bold text-white flex items-center gap-2">
                 <PlusCircle className="w-5 h-5 text-[#00e5ff]" />
-                <span>Yangi Wiki Buyum / Retsept / Ruda Qo'shish</span>
+                <span>Yangi Wiki Buyum / Retsept Qo'shish</span>
               </h2>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -746,7 +788,6 @@ export const AdminPage: React.FC = () => {
                     type="text"
                     value={wikiTier}
                     onChange={(e) => setWikiTier(e.target.value)}
-                    placeholder="Tier 1, S-Rank, Epic..."
                     className="w-full bg-[#070e17] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none"
                   />
                 </div>
@@ -788,7 +829,6 @@ export const AdminPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Items Table */}
               <div className="divide-y divide-white/5 bg-[#070e17] border border-white/10 rounded-xl overflow-hidden">
                 {games.find((g) => g.id === wikiGameId)?.items?.length === 0 ? (
                   <div className="p-8 text-center text-xs text-slate-500">
@@ -838,7 +878,86 @@ export const AdminPage: React.FC = () => {
         )}
 
         {/* ========================================================= */}
-        {/* EDIT MODAL: NEWS EDIT                                    */}
+        {/* TAB 4: AUTO-IMPORTER                                     */}
+        {/* ========================================================= */}
+        {activeTab === 'import' && (
+          <div className="bg-[#0b1424] border border-[#00e5ff]/40 rounded-2xl p-6 space-y-6">
+            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-[#00e5ff]" />
+              <span>Istochnik (Manba) Ssilkasidan Ma'lumotlarni Avtomatik Yuklash</span>
+            </h2>
+
+            <form onSubmit={handleAutoImport} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="sm:col-span-2">
+                  <label className="text-xs font-bold text-[#00e5ff] block mb-1">
+                    Istochnik Sayt Ssilkasi (Fandom Wiki URL) *
+                  </label>
+                  <input
+                    type="url"
+                    required
+                    value={importUrl}
+                    onChange={(e) => setImportUrl(e.target.value)}
+                    placeholder="https://raft.fandom.com yoki https://rust.fandom.com"
+                    className="w-full bg-[#070e17] border border-[#00e5ff]/30 focus:border-[#00e5ff] rounded-xl px-4 py-3 text-xs text-white outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-300 block mb-1">
+                    O'yin Nomi (Ixtiyoriy)
+                  </label>
+                  <input
+                    type="text"
+                    value={importGameTitle}
+                    onChange={(e) => setImportGameTitle(e.target.value)}
+                    placeholder="Avtomatik aniqlanadi..."
+                    className="w-full bg-[#070e17] border border-white/10 rounded-xl px-4 py-3 text-xs text-white outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400">
+                <span>Tezkor namunalar:</span>
+                <button
+                  type="button"
+                  onClick={() => setImportUrl('https://raft.fandom.com')}
+                  className="bg-white/5 hover:bg-white/10 text-[#00e5ff] px-2.5 py-1 rounded-lg border border-white/10"
+                >
+                  🌊 Raft Fandom Wiki
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setImportUrl('https://rust.fandom.com')}
+                  className="bg-white/5 hover:bg-white/10 text-amber-400 px-2.5 py-1 rounded-lg border border-white/10"
+                >
+                  🏹 Rust Fandom Wiki
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setImportUrl('https://theforest.fandom.com')}
+                  className="bg-white/5 hover:bg-white/10 text-emerald-400 px-2.5 py-1 rounded-lg border border-white/10"
+                >
+                  🌲 The Forest Fandom Wiki
+                </button>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={isImporting}
+                  className="bg-[#00e5ff] hover:bg-[#38bdf8] text-[#070e17] font-black text-xs px-6 py-3 rounded-xl transition-all shadow-lg shadow-[#00e5ff]/20 flex items-center gap-2"
+                >
+                  {isImporting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <DownloadCloud className="w-4 h-4" />}
+                  <span>{isImporting ? "Yuklanmoqda..." : "Ushbu Manbadan Saytga Ma'lumotlarni Qo'shish"}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* ========================================================= */}
+        {/* EDIT MODAL: NEWS EDIT (With File Upload from Computer)    */}
         {/* ========================================================= */}
         {editingNews && (
           <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
@@ -865,14 +984,28 @@ export const AdminPage: React.FC = () => {
                   />
                 </div>
 
-                <div>
-                  <label className="text-xs font-bold text-slate-300 block mb-1">Muqova Rasmi URL</label>
+                {/* EDIT NEWS: LOCAL FILE UPLOADER */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-[#00e5ff] flex items-center gap-1.5">
+                    <Upload className="w-4 h-4" />
+                    <span>Muqova Rasmini Kompyuterdan Yangilash</span>
+                  </label>
                   <input
-                    type="url"
-                    value={editingNews.coverImage}
-                    onChange={(e) => setEditingNews({ ...editingNews, coverImage: e.target.value })}
-                    className="w-full bg-[#070e17] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none"
+                    type="file"
+                    ref={editNewsFileInputRef}
+                    accept="image/*"
+                    onChange={(e) => handleFileUpload(e, (newUrl) => {
+                      setEditingNews({ ...editingNews, coverImage: newUrl });
+                    })}
+                    className="hidden"
                   />
+                  <div
+                    onClick={() => editNewsFileInputRef.current?.click()}
+                    className="border border-dashed border-white/20 hover:border-[#00e5ff] bg-[#070e17] rounded-xl p-3 text-center cursor-pointer transition-all flex items-center justify-center gap-3"
+                  >
+                    <img src={editingNews.coverImage} alt="Current" className="h-14 w-20 object-cover rounded-lg border border-white/20" />
+                    <span className="text-xs text-[#00e5ff] font-bold">Kompyuterdan yangi rasm tanlash uchun bosing</span>
+                  </div>
                 </div>
 
                 <div>
@@ -932,14 +1065,12 @@ export const AdminPage: React.FC = () => {
           </div>
         )}
 
-        {/* ========================================================= */}
-        {/* EDIT MODAL: GAME EDIT                                    */}
-        {/* ========================================================= */}
+        {/* EDIT GAME MODAL */}
         {editingGame && (
           <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
             <div className="bg-[#0b1424] border border-[#00e5ff]/50 rounded-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto p-6 space-y-4 shadow-2xl">
               <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                <h3 className="text-lg font-bold text-white">O'yin Ma'lumotlarini Tahrirlash</h3>
+                <h3 className="text-lg font-bold text-white">O'yinni Tahrirlash</h3>
                 <button onClick={() => setEditingGame(null)} className="text-slate-400 hover:text-white">
                   <X className="w-5 h-5" />
                 </button>
@@ -968,7 +1099,7 @@ export const AdminPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-slate-300 block mb-1">Istochnik / Manba Sayt Ssilkasi</label>
+                  <label className="text-xs font-bold text-[#00e5ff] block mb-1">Manba (Istochnik) URL</label>
                   <input
                     type="url"
                     value={editingGame.sourceUrl || ''}
@@ -978,17 +1109,28 @@ export const AdminPage: React.FC = () => {
                   />
                 </div>
 
-                <div>
-                  <label className="text-xs font-bold text-slate-300 block mb-1">Qisqa Shior (Tagline)</label>
+                {/* EDIT GAME COVER FILE UPLOAD */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-[#00e5ff] flex items-center gap-1.5">
+                    <Upload className="w-4 h-4" />
+                    <span>Kompyuterdan Yangi Rasm Yuklash</span>
+                  </label>
                   <input
-                    type="text"
-                    value={editingGame.tagline.uz}
-                    onChange={(e) => setEditingGame({
-                      ...editingGame,
-                      tagline: { ...editingGame.tagline, uz: e.target.value }
+                    type="file"
+                    ref={editGameFileInputRef}
+                    accept="image/*"
+                    onChange={(e) => handleFileUpload(e, (newUrl) => {
+                      setEditingGame({ ...editingGame, coverImage: newUrl });
                     })}
-                    className="w-full bg-[#070e17] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none"
+                    className="hidden"
                   />
+                  <div
+                    onClick={() => editGameFileInputRef.current?.click()}
+                    className="border border-dashed border-white/20 hover:border-[#00e5ff] bg-[#070e17] rounded-xl p-3 text-center cursor-pointer transition-all flex items-center justify-center gap-3"
+                  >
+                    <img src={editingGame.coverImage} alt="Current" className="h-14 w-20 object-cover rounded-lg border border-white/20" />
+                    <span className="text-xs text-[#00e5ff] font-bold">Rasmni o'zgartirish uchun bosing</span>
+                  </div>
                 </div>
 
                 <div className="flex justify-end gap-3 pt-3 border-t border-white/10">
@@ -1011,9 +1153,7 @@ export const AdminPage: React.FC = () => {
           </div>
         )}
 
-        {/* ========================================================= */}
-        {/* EDIT MODAL: WIKI ITEM EDIT                               */}
-        {/* ========================================================= */}
+        {/* EDIT WIKI ITEM MODAL */}
         {editingWikiItem && (
           <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
             <div className="bg-[#0b1424] border border-[#00e5ff]/50 rounded-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto p-6 space-y-4 shadow-2xl">
