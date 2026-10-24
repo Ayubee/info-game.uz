@@ -26,19 +26,32 @@ export const Footer: React.FC = () => {
             </p>
           </div>
 
-          {/* Quick Wiki Links */}
+          {/* Quick News Topics */}
           <div>
             <div className="text-white font-bold text-xs uppercase tracking-wider mb-3">
-              Mashhur O'yinlar
+              Yangiliklar Mavzulari
             </div>
             <ul className="space-y-2">
-              {games.slice(0, 4).map((g) => (
-                <li key={g.id}>
-                  <Link to={`/games/${g.id}`} className="hover:text-[#00e5ff] transition-colors">
-                    {g.name}
-                  </Link>
-                </li>
-              ))}
+              <li>
+                <Link to="/news" className="hover:text-[#00e5ff] transition-colors">
+                  🔥 GTA 6 Reliz Tafsilotlari
+                </Link>
+              </li>
+              <li>
+                <Link to="/news" className="hover:text-[#00e5ff] transition-colors">
+                  🎯 Counter-Strike 2 Yangilanishlari
+                </Link>
+              </li>
+              <li>
+                <Link to="/news" className="hover:text-[#00e5ff] transition-colors">
+                  ⛏️ Minecraft Patchlar
+                </Link>
+              </li>
+              <li>
+                <Link to="/news" className="hover:text-[#00e5ff] transition-colors">
+                  🎬 Yangi O'yin Treylerlari
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -52,10 +65,10 @@ export const Footer: React.FC = () => {
                 <Link to="/" className="hover:text-[#00e5ff]">Bosh Sahifa</Link>
               </li>
               <li>
-                <Link to="/games/raft" className="hover:text-[#00e5ff]">Raft To'liq Qo'llanma</Link>
+                <Link to="/news" className="hover:text-[#00e5ff]">Barcha O'yin Yangiliklari</Link>
               </li>
               <li>
-                <Link to="/news" className="hover:text-[#00e5ff]">So'nggi Yangiliklar</Link>
+                <Link to="/news" className="hover:text-[#00e5ff]">Kutilayotgan Relizlar</Link>
               </li>
             </ul>
           </div>
