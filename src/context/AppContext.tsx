@@ -166,6 +166,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       date: new Date().toISOString().split('T')[0],
       views: 1,
       expectedReleaseDate: newArticle.expectedReleaseDate || '',
+      sourceUrl: newArticle.sourceUrl || '',
+      sourceName: newArticle.sourceName || '',
     };
 
     setNews((prev) => [article, ...prev]);

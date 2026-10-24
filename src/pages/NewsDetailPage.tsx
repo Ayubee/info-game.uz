@@ -93,6 +93,25 @@ export const NewsDetailPage: React.FC = () => {
           {t(article.content)}
         </div>
 
+        {/* Optional Source Attribution Link */}
+        {article.sourceUrl && (
+          <div className="bg-[#0b1424] border border-[#00e5ff]/20 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="text-xs text-slate-300 flex items-center gap-2">
+              <span className="text-[#00e5ff] font-bold">Asl Manba:</span>
+              <span>{article.sourceName || "Rasmiy Sayt / Istochnik"}</span>
+            </div>
+            <a
+              href={article.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 bg-[#00e5ff]/10 hover:bg-[#00e5ff]/20 text-[#00e5ff] border border-[#00e5ff]/30 text-xs px-3 py-1.5 rounded-lg transition-colors font-bold"
+            >
+              <span>Manba Sahifasiga O'tish</span>
+              <span className="text-sm">↗</span>
+            </a>
+          </div>
+        )}
+
         {/* Tags */}
         <div className="pt-4 flex flex-wrap gap-2 items-center">
           <span className="text-xs font-bold text-slate-400">Teglar:</span>

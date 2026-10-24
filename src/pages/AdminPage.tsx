@@ -106,6 +106,8 @@ export const AdminPage: React.FC = () => {
   const [newsCustomGame, setNewsCustomGame] = useState('');
   const [newsAuthor, setNewsAuthor] = useState('Bosh Muharrir');
   const [newsExpectedReleaseDate, setNewsExpectedReleaseDate] = useState('');
+  const [newsSourceUrl, setNewsSourceUrl] = useState('');
+  const [newsSourceName, setNewsSourceName] = useState('');
   
   // Tag selection system
   const [selectedTags, setSelectedTags] = useState<string[]>(['Yangilik', 'Reliz']);
@@ -216,6 +218,8 @@ export const AdminPage: React.FC = () => {
       tags: selectedTags.length > 0 ? selectedTags : ['Yangilik'],
       author: newsAuthor,
       expectedReleaseDate: newsExpectedReleaseDate.trim() || undefined,
+      sourceUrl: newsSourceUrl.trim() || undefined,
+      sourceName: newsSourceName.trim() || undefined,
     });
 
     setNewsTitleUz('');
@@ -231,6 +235,8 @@ export const AdminPage: React.FC = () => {
     setNewsVideoUrl('');
     setNewsExpectedReleaseDate('');
     setNewsCustomGame('');
+    setNewsSourceUrl('');
+    setNewsSourceName('');
     showNotification("Yangilik barcha tillarda muvaffaqiyatli chop etildi!");
   };
 
@@ -922,6 +928,40 @@ export const AdminPage: React.FC = () => {
                 )}
               </div>
 
+              {/* Source (Istochnik) Information - OPTIONAL */}
+              <div className="bg-[#070e17] border border-white/10 rounded-2xl p-4 space-y-3">
+                <div className="flex items-center gap-2 text-xs font-bold text-[#00e5ff]">
+                  <ExternalLink className="w-4 h-4" />
+                  <span>Istochnik / Manba Ma'lumotlari (Ixtiyoriy)</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[11px] font-semibold text-slate-300 block mb-1">
+                      Manba Sayt Nomi (masalan: Rockstar Games, IGN, Steam, PC Gamer)
+                    </label>
+                    <input
+                      type="text"
+                      value={newsSourceName}
+                      onChange={(e) => setNewsSourceName(e.target.value)}
+                      placeholder="IGN, Rockstar Games..."
+                      className="w-full bg-[#0b1424] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-[#00e5ff]"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-semibold text-slate-300 block mb-1">
+                      Manba Ssilkasi (Asl maqola URL manzili)
+                    </label>
+                    <input
+                      type="url"
+                      value={newsSourceUrl}
+                      onChange={(e) => setNewsSourceUrl(e.target.value)}
+                      placeholder="https://..."
+                      className="w-full bg-[#0b1424] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-[#00e5ff]"
+                    />
+                  </div>
+                </div>
+              </div>
+
               <button
                 type="submit"
                 className="bg-[#00e5ff] text-[#070e17] font-black text-xs px-6 py-2.5 rounded-xl hover:bg-[#38bdf8] transition-colors shadow-lg shadow-[#00e5ff]/20"
@@ -1276,6 +1316,30 @@ export const AdminPage: React.FC = () => {
                     })}
                     className="w-full bg-[#070e17] border border-white/10 rounded-xl p-3 text-xs text-white outline-none"
                   />
+                </div>
+
+                {/* Edit Source URL & Source Name */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-bold text-slate-300 block mb-1">Manba Sayt Nomi</label>
+                    <input
+                      type="text"
+                      value={editingNews.sourceName || ''}
+                      onChange={(e) => setEditingNews({ ...editingNews, sourceName: e.target.value })}
+                      placeholder="IGN, Rockstar Games..."
+                      className="w-full bg-[#070e17] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-300 block mb-1">Manba Ssilkasi</label>
+                    <input
+                      type="url"
+                      value={editingNews.sourceUrl || ''}
+                      onChange={(e) => setEditingNews({ ...editingNews, sourceUrl: e.target.value })}
+                      placeholder="https://..."
+                      className="w-full bg-[#070e17] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none"
+                    />
+                  </div>
                 </div>
 
                 <div className="flex justify-end gap-3 pt-3 border-t border-white/10">

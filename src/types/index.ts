@@ -64,4 +64,6 @@ export interface NewsArticle {
   date: string;
   views: number;
   expectedReleaseDate?: string; // Yangilikda o'yinning kutilayotgan reliz sanasi (ixtiyoriy)
+  sourceUrl?: string; // Istochnik ssilkasi (ixtiyoriy)
+  sourceName?: string; // Istochnik sayt nomi (ixtiyoriy, masalan: IGN, Rockstar, PC Gamer)
 }
