@@ -1,0 +1,142 @@
+import { initializeApp, getApps, getApp } from 'firebase/app';
+import { 
+  getFirestore, collection, doc, setDoc, deleteDoc, 
+  onSnapshot, getDocs, Firestore 
+} from 'firebase/firestore';
+import { Game, NewsArticle } from '../types';
+import { INITIAL_GAMES, INITIAL_NEWS } from '../data/mockData';
+
+export interface FirebaseConfig {
+  apiKey: string;
+  authDomain: string;
+  projectId: string;
+  storageBucket?: string;
+  messagingSenderId?: string;
+  appId?: string;
+}
+
+// 1. Get configuration either from localStorage (set via Admin UI) or from Vite env variables
+export const getActiveFirebaseConfig = (): FirebaseConfig | null => {
+  const localSaved = localStorage.getItem('info_game_firebase_config');
+  if (localSaved) {
+    try {
+      const parsed = JSON.parse(localSaved);
+      if (parsed.apiKey && parsed.projectId) {
+        return parsed;
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  // Fallback to import.meta.env if provided in Vercel
+  const envApiKey = import.meta.env.VITE_FIREBASE_API_KEY;
+  const envProjectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
+  if (envApiKey && envProjectId) {
+    return {
+      apiKey: envApiKey,
+      authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || `${envProjectId}.firebaseapp.com`,
+      projectId: envProjectId,
+      storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+      appId: import.meta.env.VITE_FIREBASE_APP_ID,
+    };
+  }
+
+  return null;
+};
+
+let dbInstance: Firestore | null = null;
+
+export const initFirebase = (): Firestore | null => {
+  if (dbInstance) return dbInstance;
+
+  const config = getActiveFirebaseConfig();
+  if (!config) return null;
+
+  try {
+    const app = getApps().length === 0 ? initializeApp(config) : getApp();
+    dbInstance = getFirestore(app);
+    return dbInstance;
+  } catch (err) {
+    console.warn("Firebase initialization error:", err);
+    return null;
+  }
+};
+
+export const isFirebaseActive = (): boolean => {
+  return initFirebase() !== null;
+};
+
+// ----------------------------------------------------
+// Firestore Sync Services
+// ----------------------------------------------------
+export const syncGamesFromFirestore = (onData: (games: Game[]) => void) => {
+  const db = initFirebase();
+  if (!db) return () => {};
+
+  const gamesRef = collection(db, 'games');
+  return onSnapshot(gamesRef, (snapshot) => {
+    if (snapshot.empty) {
+      // First time database is opened: seed with INITIAL_GAMES
+      INITIAL_GAMES.forEach((g) => {
+        setDoc(doc(db, 'games', g.id), g).catch(console.error);
+      });
+      onData(INITIAL_GAMES);
+    } else {
+      const items: Game[] = [];
+      snapshot.forEach((docSnap) => {
+        items.push(docSnap.data() as Game);
+      });
+      onData(items);
+    }
+  }, (err) => {
+    console.error("Firestore Games sync error:", err);
+  });
+};
+
+export const syncNewsFromFirestore = (onData: (news: NewsArticle[]) => void) => {
+  const db = initFirebase();
+  if (!db) return () => {};
+
+  const newsRef = collection(db, 'news');
+  return onSnapshot(newsRef, (snapshot) => {
+    if (snapshot.empty) {
+      INITIAL_NEWS.forEach((n) => {
+        setDoc(doc(db, 'news', n.id), n).catch(console.error);
+      });
+      onData(INITIAL_NEWS);
+    } else {
+      const items: NewsArticle[] = [];
+      snapshot.forEach((docSnap) => {
+        items.push(docSnap.data() as NewsArticle);
+      });
+      onData(items);
+    }
+  }, (err) => {
+    console.error("Firestore News sync error:", err);
+  });
+};
+
+export const saveGameToFirestore = async (game: Game) => {
+  const db = initFirebase();
+  if (!db) return;
+  await setDoc(doc(db, 'games', game.id), game);
+};
+
+export const deleteGameFromFirestore = async (gameId: string) => {
+  const db = initFirebase();
+  if (!db) return;
+  await deleteDoc(doc(db, 'games', gameId));
+};
+
+export const saveNewsToFirestore = async (article: NewsArticle) => {
+  const db = initFirebase();
+  if (!db) return;
+  await setDoc(doc(db, 'news', article.id), article);
+};
+
+export const deleteNewsFromFirestore = async (articleId: string) => {
+  const db = initFirebase();
+  if (!db) return;
+  await deleteDoc(doc(db, 'news', articleId));
+};

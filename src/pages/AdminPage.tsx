@@ -3,11 +3,10 @@ import { useApp } from '../context/AppContext';
 import { 
   Shield, PlusCircle, Gamepad2, Newspaper, Database, CheckCircle, 
   ExternalLink, Image as ImageIcon, Video, Edit3, Trash2, X, Sparkles, 
-  DownloadCloud, RefreshCw, Upload, FileImage
+  DownloadCloud, RefreshCw, Upload, FileImage, CloudLightning, Flame, Globe
 } from 'lucide-react';
 import { Game, NewsArticle, WikiItem } from '../types';
 
-// Helper to convert & optimize file from computer to Base64
 const processImageFile = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     if (!file.type.startsWith('image/')) {
@@ -41,7 +40,6 @@ const processImageFile = (file: File): Promise<string> => {
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx?.drawImage(img, 0, 0, width, height);
-        // Optimize to JPEG with 82% quality (crisp yet small footprint)
         const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
         resolve(dataUrl);
       };
@@ -59,10 +57,11 @@ export const AdminPage: React.FC = () => {
     addGame, updateGame, deleteGame,
     addNews, updateNews, deleteNews,
     addWikiItem, updateWikiItem, deleteWikiItem,
-    importGameFromSource 
+    importGameFromSource,
+    isFirebaseConnected, setFirebaseConfig
   } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'games' | 'news' | 'wiki' | 'import'>('news');
+  const [activeTab, setActiveTab] = useState<'games' | 'news' | 'wiki' | 'import' | 'database'>('news');
   const [successMessage, setSuccessMessage] = useState<string>('');
   const [isImporting, setIsImporting] = useState<boolean>(false);
 
@@ -72,16 +71,12 @@ export const AdminPage: React.FC = () => {
   const gameFileInputRef = useRef<HTMLInputElement>(null);
   const editGameFileInputRef = useRef<HTMLInputElement>(null);
 
-  // ----------------------------------------------------
-  // Edit State Modals
-  // ----------------------------------------------------
+  // Edit Modals
   const [editingNews, setEditingNews] = useState<NewsArticle | null>(null);
   const [editingGame, setEditingGame] = useState<Game | null>(null);
   const [editingWikiItem, setEditingWikiItem] = useState<{ gameId: string; item: WikiItem } | null>(null);
 
-  // ----------------------------------------------------
   // Form State: Add Game
-  // ----------------------------------------------------
   const [gameName, setGameName] = useState('');
   const [gameYear, setGameYear] = useState('2024');
   const [gameDeveloper, setGameDeveloper] = useState('');
@@ -91,9 +86,7 @@ export const AdminPage: React.FC = () => {
   const [gameTaglineUz, setGameTaglineUz] = useState('');
   const [gameDescUz, setGameDescUz] = useState('');
 
-  // ----------------------------------------------------
   // Form State: Add News
-  // ----------------------------------------------------
   const [newsTitleUz, setNewsTitleUz] = useState('');
   const [newsSummaryUz, setNewsSummaryUz] = useState('');
   const [newsContentUz, setNewsContentUz] = useState('');
@@ -103,9 +96,7 @@ export const AdminPage: React.FC = () => {
   const [newsTags, setNewsTags] = useState('Patch, Reliz, O\'yinlar');
   const [newsAuthor, setNewsAuthor] = useState('Bosh Muharrir');
 
-  // ----------------------------------------------------
   // Form State: Add Wiki Item
-  // ----------------------------------------------------
   const [wikiGameId, setWikiGameId] = useState('raft');
   const [wikiCategory, setWikiCategory] = useState('resources');
   const [wikiNameUz, setWikiNameUz] = useState('');
@@ -116,18 +107,20 @@ export const AdminPage: React.FC = () => {
   const [wikiIngredient, setWikiIngredient] = useState('Plank (O\'tin)');
   const [wikiIngredientCount, setWikiIngredientCount] = useState(2);
 
-  // ----------------------------------------------------
   // Form State: Auto Importer
-  // ----------------------------------------------------
   const [importUrl, setImportUrl] = useState('https://raft.fandom.com');
   const [importGameTitle, setImportGameTitle] = useState('');
+
+  // Firebase Config Form State
+  const [fbApiKey, setFbApiKey] = useState('');
+  const [fbProjectId, setFbProjectId] = useState('');
+  const [fbRawConfig, setFbRawConfig] = useState('');
 
   const showNotification = (msg: string) => {
     setSuccessMessage(msg);
     setTimeout(() => setSuccessMessage(''), 4500);
   };
 
-  // Handle file uploads from computer
   const handleFileUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
     setter: (val: string) => void
@@ -144,9 +137,6 @@ export const AdminPage: React.FC = () => {
     }
   };
 
-  // ----------------------------------------------------
-  // Handlers: Create
-  // ----------------------------------------------------
   const handleCreateGame = (e: React.FormEvent) => {
     e.preventDefault();
     if (!gameName.trim()) return;
@@ -234,6 +224,34 @@ export const AdminPage: React.FC = () => {
     }
   };
 
+  const handleSaveFirebaseConfig = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (fbRawConfig.trim()) {
+      try {
+        const cleaned = fbRawConfig.replace(/^[^{]*/, '').replace(/[^}]*$/, '');
+        const parsed = JSON.parse(cleaned);
+        if (parsed.apiKey && parsed.projectId) {
+          setFirebaseConfig(parsed);
+          return;
+        }
+      } catch (err) {
+        alert("JSON formatida xatolik. Iltimos tekshirib qayta tashlang.");
+        return;
+      }
+    }
+
+    if (fbApiKey && fbProjectId) {
+      setFirebaseConfig({
+        apiKey: fbApiKey.trim(),
+        projectId: fbProjectId.trim(),
+        authDomain: `${fbProjectId.trim()}.firebaseapp.com`,
+      });
+      return;
+    }
+
+    alert("Iltimos Firebase API Key va Project ID kiriting!");
+  };
+
   const handleSaveNewsEdit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingNews) return;
@@ -274,12 +292,15 @@ export const AdminPage: React.FC = () => {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl font-black text-white">Boshqaruv Paneli (Admin CMS)</h1>
-                <span className="text-[10px] font-bold bg-[#00e5ff]/20 text-[#00e5ff] px-2 py-0.5 rounded">
-                  Kompyuterdan Rasm Yuklash
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1 ${
+                  isFirebaseConnected ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
+                }`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${isFirebaseConnected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
+                  {isFirebaseConnected ? "Google Firebase Faol (Jonli Baza)" : "Lokal Rejim"}
                 </span>
               </div>
               <p className="text-slate-400 text-xs mt-0.5">
-                Maqolalarga to'g'ridan-to'g'ri kompyuterdan rasm yuklash, postlarni tahrirlash va manbadan avtomatik import qilish.
+                Barcha postlar, o'yinlar, kompyuterdan rasm yuklash va Google Firebase bepul bazasi orqali butun dunyoga jonli ulash.
               </p>
             </div>
           </div>
@@ -300,6 +321,19 @@ export const AdminPage: React.FC = () => {
         {/* Tab Switcher */}
         <div className="flex flex-wrap gap-2 border-b border-white/10 pb-2">
           <button
+            onClick={() => setActiveTab('database')}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+              activeTab === 'database'
+                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg'
+                : 'bg-[#0b1424] text-amber-400 hover:bg-white/5 border border-amber-500/30'
+            }`}
+          >
+            <Flame className="w-4 h-4 text-amber-300" />
+            <span>🔥 Google Firebase Baza Ulanishi</span>
+            {isFirebaseConnected && <span className="text-[9px] bg-white/20 px-1.5 py-0.2 rounded font-mono">ULANDI</span>}
+          </button>
+
+          <button
             onClick={() => setActiveTab('news')}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
               activeTab === 'news'
@@ -308,7 +342,7 @@ export const AdminPage: React.FC = () => {
             }`}
           >
             <Newspaper className="w-4 h-4" />
-            <span>1. Postlar & Yangiliklar ({news.length})</span>
+            <span>Postlar & Yangiliklar ({news.length})</span>
           </button>
 
           <button
@@ -320,7 +354,7 @@ export const AdminPage: React.FC = () => {
             }`}
           >
             <Gamepad2 className="w-4 h-4" />
-            <span>2. O'yinlar ({games.length})</span>
+            <span>O'yinlar ({games.length})</span>
           </button>
 
           <button
@@ -332,7 +366,7 @@ export const AdminPage: React.FC = () => {
             }`}
           >
             <Database className="w-4 h-4" />
-            <span>3. Wiki Buyumlar & Retseptlar</span>
+            <span>Wiki Buyumlar & Retseptlar</span>
           </button>
 
           <button
@@ -344,16 +378,143 @@ export const AdminPage: React.FC = () => {
             }`}
           >
             <DownloadCloud className="w-4 h-4" />
-            <span>⚡ Istochnikdan Avtomatik Yuklash</span>
+            <span>⚡ Istochnikdan Yuklash</span>
           </button>
         </div>
+
+        {/* ========================================================= */}
+        {/* TAB 0: GOOGLE FIREBASE FREE DATABASE SETUP & CONNECT     */}
+        {/* ========================================================= */}
+        {activeTab === 'database' && (
+          <div className="bg-[#0b1424] border border-amber-500/40 rounded-2xl p-6 space-y-6">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <div>
+                <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Flame className="w-5 h-5 text-amber-400" />
+                  <span>Google Firebase Bepul Baza (Firestore) Sozlamasi</span>
+                </h2>
+                <p className="text-xs text-slate-300 mt-1">
+                  Bu nima uchun kerak? Siz saytda yangi post yoki o'yin qo'shganingizda, u <strong>butun dunyodagi boshqa odamlarga ham ko'rinishi</strong> uchun Google Firebase bepul bulutli bazasiga ulanadi!
+                </p>
+              </div>
+
+              <div className="text-right">
+                {isFirebaseConnected ? (
+                  <span className="text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-3 py-1.5 rounded-xl font-bold inline-flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                    <span>Google Baza Faol Ishlamoqda</span>
+                  </span>
+                ) : (
+                  <span className="text-xs bg-amber-500/20 text-amber-300 border border-amber-500/40 px-3 py-1.5 rounded-xl font-bold">
+                    Hali Ulanmagan
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Step-by-Step Instructions */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-[#070e17] border border-white/10 rounded-xl p-4 space-y-2">
+                <div className="text-xs font-bold text-amber-400 flex items-center gap-1.5">
+                  <span className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center text-[10px]">1</span>
+                  <span>Saytga Kiring</span>
+                </div>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Brauzeringizda <a href="https://console.firebase.google.com" target="_blank" rel="noopener noreferrer" className="text-[#00e5ff] underline font-bold">console.firebase.google.com</a> manziliga kiring (Google akkountingiz bilan bepul).
+                </p>
+              </div>
+
+              <div className="bg-[#070e17] border border-white/10 rounded-xl p-4 space-y-2">
+                <div className="text-xs font-bold text-amber-400 flex items-center gap-1.5">
+                  <span className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center text-[10px]">2</span>
+                  <span>Baza Yarating</span>
+                </div>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  <strong>"Create a project"</strong> (nomi: <code>info-game-uz</code>) &gt; chap menyudan <strong>"Firestore Database"</strong> &gt; <strong>"Create Database"</strong> ni bosib, <em>"Test mode"</em>ni tanlang.
+                </p>
+              </div>
+
+              <div className="bg-[#070e17] border border-white/10 rounded-xl p-4 space-y-2">
+                <div className="text-xs font-bold text-amber-400 flex items-center gap-1.5">
+                  <span className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center text-[10px]">3</span>
+                  <span>Kodni Nusxalang</span>
+                </div>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Loyiha sozlamalarida Web <code>&lt;/&gt;</code> belgisini bosib, chiqqan <strong>firebaseConfig</strong> kodini quyidagi maydonga tashlang.
+                </p>
+              </div>
+            </div>
+
+            {/* Form to paste config */}
+            <form onSubmit={handleSaveFirebaseConfig} className="bg-[#070e17] border border-white/10 rounded-xl p-5 space-y-4">
+              <div>
+                <label className="text-xs font-bold text-white block mb-1">
+                  Firebase Config JSON yoki Kodini shu yerga tashlang:
+                </label>
+                <textarea
+                  rows={4}
+                  value={fbRawConfig}
+                  onChange={(e) => setFbRawConfig(e.target.value)}
+                  placeholder={`{\n  "apiKey": "AIzaSy...",\n  "authDomain": "info-game-uz.firebaseapp.com",\n  "projectId": "info-game-uz"\n}`}
+                  className="w-full bg-[#0b1424] border border-white/15 focus:border-amber-400 rounded-xl p-3 text-xs text-white font-mono outline-none"
+                />
+              </div>
+
+              <div className="text-xs text-slate-400">Yoki alohida kiriting:</div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[11px] font-semibold text-slate-300 block mb-1">API Key</label>
+                  <input
+                    type="text"
+                    value={fbApiKey}
+                    onChange={(e) => setFbApiKey(e.target.value)}
+                    placeholder="AIzaSy..."
+                    className="w-full bg-[#0b1424] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-semibold text-slate-300 block mb-1">Project ID</label>
+                  <input
+                    type="text"
+                    value={fbProjectId}
+                    onChange={(e) => setFbProjectId(e.target.value)}
+                    placeholder="info-game-uz"
+                    className="w-full bg-[#0b1424] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2 flex items-center justify-between">
+                <button
+                  type="submit"
+                  className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-black text-xs px-6 py-2.5 rounded-xl shadow-lg transition-all"
+                >
+                  Bazani Saytga Ulash va Faollashtirish
+                </button>
+
+                {isFirebaseConnected && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      localStorage.removeItem('info_game_firebase_config');
+                      window.location.reload();
+                    }}
+                    className="text-xs text-red-400 hover:underline"
+                  >
+                    Bazani uzish
+                  </button>
+                )}
+              </div>
+            </form>
+          </div>
+        )}
 
         {/* ========================================================= */}
         {/* TAB 1: NEWS (Add with Local File Upload, Edit, Delete)   */}
         {/* ========================================================= */}
         {activeTab === 'news' && (
           <div className="space-y-8">
-            {/* Create News Form */}
             <form onSubmit={handleCreateNews} className="bg-[#0b1424] border border-white/10 rounded-2xl p-6 space-y-6">
               <h2 className="text-lg font-bold text-white flex items-center gap-2">
                 <PlusCircle className="w-5 h-5 text-[#00e5ff]" />
@@ -386,14 +547,13 @@ export const AdminPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* LOCAL FILE UPLOADER FOR IMAGE (NO URL REQUIRED!) */}
+              {/* Local File Uploader for News Image */}
               <div className="space-y-2">
                 <label className="text-xs font-bold text-[#00e5ff] flex items-center gap-1.5">
                   <Upload className="w-4 h-4" />
                   <span>Maqola Rasmi (Kompyuteringizdan Fayl Tanlang)</span>
                 </label>
 
-                {/* Hidden File Input */}
                 <input
                   type="file"
                   ref={newsFileInputRef}
@@ -402,7 +562,6 @@ export const AdminPage: React.FC = () => {
                   className="hidden"
                 />
 
-                {/* Drag & Drop / Click Upload Box */}
                 <div
                   onClick={() => newsFileInputRef.current?.click()}
                   className="border-2 border-dashed border-[#00e5ff]/30 hover:border-[#00e5ff] bg-[#070e17] rounded-2xl p-6 text-center cursor-pointer transition-all group"
@@ -496,13 +655,13 @@ export const AdminPage: React.FC = () => {
 
               <button
                 type="submit"
-                className="bg-[#00e5ff] text-[#070e17] font-black text-xs px-6 py-2.5 rounded-xl hover:bg-[#38bdf8] transition-colors"
+                className="bg-[#00e5ff] text-[#070e17] font-black text-xs px-6 py-2.5 rounded-xl hover:bg-[#38bdf8] transition-colors shadow-lg shadow-[#00e5ff]/20"
               >
                 Maqolani Chop Etish
               </button>
             </form>
 
-            {/* Existing Posts List (With Edit and Delete) */}
+            {/* Existing Posts List */}
             <div className="bg-[#0b1424] border border-white/10 rounded-2xl p-6 space-y-4">
               <h3 className="text-base font-bold text-white flex items-center justify-between">
                 <span>Mavjud Postlar Ro'yxati ({news.length})</span>
@@ -788,6 +947,7 @@ export const AdminPage: React.FC = () => {
                     type="text"
                     value={wikiTier}
                     onChange={(e) => setWikiTier(e.target.value)}
+                    placeholder="Tier 1, S-Rank, Epic..."
                     className="w-full bg-[#070e17] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none"
                   />
                 </div>
@@ -912,7 +1072,7 @@ export const AdminPage: React.FC = () => {
                     value={importGameTitle}
                     onChange={(e) => setImportGameTitle(e.target.value)}
                     placeholder="Avtomatik aniqlanadi..."
-                    className="w-full bg-[#070e17] border border-white/10 rounded-xl px-4 py-3 text-xs text-white outline-none"
+                    className="w-full bg-[#070e17] border border-white/10 focus:border-[#00e5ff] rounded-xl px-4 py-3 text-xs text-white outline-none"
                   />
                 </div>
               </div>
@@ -984,7 +1144,6 @@ export const AdminPage: React.FC = () => {
                   />
                 </div>
 
-                {/* EDIT NEWS: LOCAL FILE UPLOADER */}
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-[#00e5ff] flex items-center gap-1.5">
                     <Upload className="w-4 h-4" />
@@ -1109,7 +1268,6 @@ export const AdminPage: React.FC = () => {
                   />
                 </div>
 
-                {/* EDIT GAME COVER FILE UPLOAD */}
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-[#00e5ff] flex items-center gap-1.5">
                     <Upload className="w-4 h-4" />

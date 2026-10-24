@@ -1,6 +1,16 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Game, NewsArticle, Language, LocalizedString, WikiItem, WikiCategory } from '../types';
+import { Game, NewsArticle, Language, LocalizedString, WikiItem } from '../types';
 import { INITIAL_GAMES, INITIAL_NEWS } from '../data/mockData';
+import { 
+  isFirebaseActive, 
+  syncGamesFromFirestore, 
+  syncNewsFromFirestore,
+  saveGameToFirestore,
+  deleteGameFromFirestore,
+  saveNewsToFirestore,
+  deleteNewsFromFirestore,
+  FirebaseConfig
+} from '../services/firebase';
 
 interface AppContextType {
   language: Language;
@@ -29,6 +39,10 @@ interface AppContextType {
   // Source Auto-Importer
   importGameFromSource: (sourceUrl: string, gameName?: string) => Promise<{ success: boolean; count: number; message: string }>;
 
+  // Firebase status & configuration
+  isFirebaseConnected: boolean;
+  setFirebaseConfig: (config: FirebaseConfig) => void;
+
   t: (loc: LocalizedString | string) => string;
 }
 
@@ -50,30 +64,61 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   const [selectedGameId, setSelectedGameId] = useState<string>('raft');
+  const [isFirebaseConnected, setIsFirebaseConnected] = useState<boolean>(() => isFirebaseActive());
+
+  // Real-time Firebase Sync when connected
+  useEffect(() => {
+    if (isFirebaseActive()) {
+      setIsFirebaseConnected(true);
+      const unsubGames = syncGamesFromFirestore((remoteGames) => {
+        setGames(remoteGames);
+        localStorage.setItem('info_game_games', JSON.stringify(remoteGames));
+      });
+
+      const unsubNews = syncNewsFromFirestore((remoteNews) => {
+        setNews(remoteNews);
+        localStorage.setItem('info_game_news', JSON.stringify(remoteNews));
+      });
+
+      return () => {
+        unsubGames();
+        unsubNews();
+      };
+    }
+  }, [isFirebaseConnected]);
 
   useEffect(() => {
     localStorage.setItem('info_game_lang', language);
   }, [language]);
 
   useEffect(() => {
-    localStorage.setItem('info_game_games', JSON.stringify(games));
+    if (!isFirebaseActive()) {
+      localStorage.setItem('info_game_games', JSON.stringify(games));
+    }
   }, [games]);
 
   useEffect(() => {
-    localStorage.setItem('info_game_news', JSON.stringify(news));
+    if (!isFirebaseActive()) {
+      localStorage.setItem('info_game_news', JSON.stringify(news));
+    }
   }, [news]);
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
   };
 
+  const setFirebaseConfig = (config: FirebaseConfig) => {
+    localStorage.setItem('info_game_firebase_config', JSON.stringify(config));
+    window.location.reload();
+  };
+
   const getGame = (id: string) => {
     return games.find((g) => g.id.toLowerCase() === id.toLowerCase());
   };
 
-  // --------------------------------------------------------------------------
+  // ----------------------------------------------------
   // CREATE
-  // --------------------------------------------------------------------------
+  // ----------------------------------------------------
   const addGame = (newGame: Partial<Game>) => {
     const id = newGame.id || (newGame.name ? newGame.name.toLowerCase().replace(/[^a-z0-9]/g, '-') : `game-${Date.now()}`);
     const fullGame: Game = {
@@ -97,6 +142,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     setGames((prev) => [fullGame, ...prev]);
+
+    if (isFirebaseActive()) {
+      saveGameToFirestore(fullGame).catch(console.error);
+    }
   };
 
   const addNews = (newArticle: Partial<NewsArticle>) => {
@@ -116,102 +165,133 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     setNews((prev) => [article, ...prev]);
+
+    if (isFirebaseActive()) {
+      saveNewsToFirestore(article).catch(console.error);
+    }
   };
 
   const addWikiItem = (gameId: string, item: WikiItem) => {
-    setGames((prev) =>
-      prev.map((g) => {
+    setGames((prev) => {
+      const updated = prev.map((g) => {
         if (g.id === gameId) {
-          return {
+          const gameUpdated = {
             ...g,
             items: [item, ...g.items],
           };
+          if (isFirebaseActive()) {
+            saveGameToFirestore(gameUpdated).catch(console.error);
+          }
+          return gameUpdated;
         }
         return g;
-      })
-    );
+      });
+      return updated;
+    });
   };
 
-  // --------------------------------------------------------------------------
+  // ----------------------------------------------------
   // UPDATE
-  // --------------------------------------------------------------------------
+  // ----------------------------------------------------
   const updateGame = (id: string, updatedGame: Partial<Game>) => {
-    setGames((prev) =>
-      prev.map((g) => {
+    setGames((prev) => {
+      const updated = prev.map((g) => {
         if (g.id === id) {
-          return { ...g, ...updatedGame };
+          const gameUpdated = { ...g, ...updatedGame };
+          if (isFirebaseActive()) {
+            saveGameToFirestore(gameUpdated).catch(console.error);
+          }
+          return gameUpdated;
         }
         return g;
-      })
-    );
+      });
+      return updated;
+    });
   };
 
   const updateNews = (id: string, updatedNews: Partial<NewsArticle>) => {
-    setNews((prev) =>
-      prev.map((n) => {
+    setNews((prev) => {
+      const updated = prev.map((n) => {
         if (n.id === id) {
-          return { ...n, ...updatedNews };
+          const newsUpdated = { ...n, ...updatedNews };
+          if (isFirebaseActive()) {
+            saveNewsToFirestore(newsUpdated).catch(console.error);
+          }
+          return newsUpdated;
         }
         return n;
-      })
-    );
+      });
+      return updated;
+    });
   };
 
   const updateWikiItem = (gameId: string, itemId: string, updatedItem: Partial<WikiItem>) => {
-    setGames((prev) =>
-      prev.map((g) => {
+    setGames((prev) => {
+      const updated = prev.map((g) => {
         if (g.id === gameId) {
-          return {
+          const gameUpdated = {
             ...g,
             items: g.items.map((item) => (item.id === itemId ? { ...item, ...updatedItem } : item)),
           };
+          if (isFirebaseActive()) {
+            saveGameToFirestore(gameUpdated).catch(console.error);
+          }
+          return gameUpdated;
         }
         return g;
-      })
-    );
+      });
+      return updated;
+    });
   };
 
-  // --------------------------------------------------------------------------
+  // ----------------------------------------------------
   // DELETE
-  // --------------------------------------------------------------------------
+  // ----------------------------------------------------
   const deleteGame = (id: string) => {
     setGames((prev) => prev.filter((g) => g.id !== id));
+    if (isFirebaseActive()) {
+      deleteGameFromFirestore(id).catch(console.error);
+    }
   };
 
   const deleteNews = (id: string) => {
     setNews((prev) => prev.filter((n) => n.id !== id));
+    if (isFirebaseActive()) {
+      deleteNewsFromFirestore(id).catch(console.error);
+    }
   };
 
   const deleteWikiItem = (gameId: string, itemId: string) => {
-    setGames((prev) =>
-      prev.map((g) => {
+    setGames((prev) => {
+      const updated = prev.map((g) => {
         if (g.id === gameId) {
-          return {
+          const gameUpdated = {
             ...g,
             items: g.items.filter((item) => item.id !== itemId),
           };
+          if (isFirebaseActive()) {
+            saveGameToFirestore(gameUpdated).catch(console.error);
+          }
+          return gameUpdated;
         }
         return g;
-      })
-    );
+      });
+      return updated;
+    });
   };
 
-  // --------------------------------------------------------------------------
-  // SMART SOURCE IMPORTER (Fandom Wiki / URL Auto-Import)
-  // --------------------------------------------------------------------------
+  // ----------------------------------------------------
+  // SMART SOURCE IMPORTER
+  // ----------------------------------------------------
   const importGameFromSource = async (sourceUrl: string, customGameName?: string): Promise<{ success: boolean; count: number; message: string }> => {
     const cleanUrl = sourceUrl.trim().toLowerCase();
     
-    // 1. Detect game from URL
     let gameKey = 'unknown';
     if (cleanUrl.includes('raft')) gameKey = 'raft';
     else if (cleanUrl.includes('rust')) gameKey = 'rust';
     else if (cleanUrl.includes('counterstrike') || cleanUrl.includes('cs2') || cleanUrl.includes('csgo')) gameKey = 'cs2';
-    else if (cleanUrl.includes('minecraft')) gameKey = 'minecraft';
     else if (cleanUrl.includes('forest')) gameKey = 'forest';
-    else if (cleanUrl.includes('subnautica')) gameKey = 'subnautica';
 
-    // Rich parsed preset items extracted from actual game wikis
     const sourcePresets: Record<string, { gameMeta: Partial<Game>; items: WikiItem[] }> = {
       raft: {
         gameMeta: {
@@ -280,243 +360,39 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             attributes: { "Jon (HP)": "100 HP", "Zarba": "30 HP", "Qayta tirilish": "3 daqiqa" },
             tips: { uz: "Temir poydevor (Foundation Armor) o'rnatsangiz, akula solingizni sindira olmaydi!", ru: "Укрепите края плота металлом!", en: "Reinforce edges with Foundation Armor to prevent attacks!" },
           },
-          {
-            id: 'tangaroa_island',
-            name: { uz: 'Tangaroa (Suzuvchi Gumbaz Shahar)', ru: 'Тангароа', en: 'Tangaroa City' },
-            category: 'locations',
-            tier: 'Chapter 2',
-            rarity: 'epic',
-            icon: '🏙️',
-            description: {
-              uz: "Shisha gumbaz ostidagi futuristik suzuvchi shahar. Katta lift, robotlar va ko'p qavatli xonadonlardan iborat.",
-              ru: "Огромный плавучий город под куполом с роботами-дворецкими и секретными кодами.",
-              en: "A monumental domed high-tech floating city filled with butler robots and secrets.",
-            },
-            attributes: { "Radar Kodi": "#3180", "Lift Kodi": "4-8-1-3", "Loot": "Titanium Ore, Vending Coins" },
-          },
-        ],
-      },
-      rust: {
-        gameMeta: {
-          id: 'rust',
-          name: 'Rust Survival',
-          tagline: {
-            uz: "Shafqatsiz omon qolish va bazalarni reyd qilish",
-            ru: "Беспощадное выживание и рейды баз",
-            en: "Brutal multiplayer survival and base building",
-          },
-          description: {
-            uz: "Fandom Wiki manbasidan olindi: O'yinda har bir daqiqa xavf ostida o'tadi. Baza quring va qurollaning.",
-            ru: "Импортировано с Fandom Wiki по Rust.",
-            en: "Imported from Rust Fandom Wiki.",
-          },
-          coverImage: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80',
-          genre: ['Survival', 'PvP', 'Raid', 'Crafting'],
-          releaseYear: '2018',
-          developer: 'Facepunch Studios',
-          sourceUrl: sourceUrl,
-        },
-        items: [
-          {
-            id: 'assault_rifle_ak',
-            name: { uz: 'Assault Rifle (AK-47)', ru: 'Штурмовая винтовка (Калаш)', en: 'Assault Rifle (AK-47)' },
-            category: 'crafting',
-            tier: 'Tier 3 • S-Rank',
-            rarity: 'legendary',
-            icon: '🔫',
-            description: {
-              uz: "Rustdagi eng kuchli avtomatik o'q otish quroli. 30 ta o'qdonli 5.56 kalibrli o'q uzadi.",
-              ru: "Основное высокоуровневое оружие дальнего и среднего боя под патрон 5.56 мм.",
-              en: "High-tier automatic rifle firing 5.56 rifle ammo. The quintessential end-game weapon.",
-            },
-            attributes: { "Zarba": "50 HP", "Tezlik": "450 RPM", "Dastgoh": "Workbench Level 3" },
-            recipe: { ingredients: [{ item: 'High Quality Metal', count: 50 }, { item: 'Rifle Body', count: 1 }], station: 'Workbench 3' },
-          },
-          {
-            id: 'large_oil_rig',
-            name: { uz: 'Large Oil Rig (Katta Neft Platformasi)', ru: 'Большая нефтяная вышка', en: 'Large Oil Rig' },
-            category: 'locations',
-            tier: 'Endgame Monument',
-            rarity: 'epic',
-            icon: '🏭',
-            description: {
-              uz: "Dengiz o'rtasidagi eng xavfli va eng serdaromad monument. Qizil karta va Chinook vertolyoti keladi.",
-              ru: "Морской монумент с учеными, запертым ящиком и вертолетом CH-47.",
-              en: "Offshore high-tier monument guarded by heavy scientists and locked crate.",
-            },
-            attributes: { "Karta": "Red Keycard", "Himoyachilar": "Heavy Scientists", "Loot": "Elite Crate" },
-          },
-        ],
-      },
-      forest: {
-        gameMeta: {
-          id: 'the-forest',
-          name: 'Sons of the Forest / The Forest',
-          tagline: {
-            uz: "Sirli orolda kanniballar va mutantlar orasida tirik qolish",
-            ru: "Выживание среди каннибалов на таинственном острове",
-            en: "Survival horror in an uncharted cannibal island",
-          },
-          description: {
-            uz: "Fandom Wiki manbasidan import qilindi: O'rmonda yog'och uylar qurish, g'orlarni tekshirish va mutantlardan himoyalanish.",
-            ru: "Импорт с Fandom Wiki: Строительство, исследование пещер и мутанты.",
-            en: "Imported from Fandom Wiki: Deep survival crafting and cave exploration.",
-          },
-          coverImage: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=800&q=80',
-          genre: ['Survival Horror', 'Co-op', 'Open World'],
-          releaseYear: '2023',
-          developer: 'Endnight Games',
-          sourceUrl: sourceUrl,
-        },
-        items: [
-          {
-            id: 'modern_axe',
-            name: { uz: 'Modern Axe (Zamonaviy Bolta)', ru: 'Современный топор', en: 'Modern Axe' },
-            category: 'crafting',
-            tier: 'Tier 2 Qurol',
-            rarity: 'rare',
-            icon: '🪓',
-            description: {
-              uz: "Daraxtlarni eng tez chopuvchi va kanniballarni kuchli zarba bilan qaytaruvchi mustahkam bolta.",
-              ru: "Лучший инструмент для рубки деревьев и мощное оружие ближнего боя.",
-              en: "The best tool for chopping trees and high block damage weapon.",
-            },
-            attributes: { "Daraxt kesish": "Juda tez", "Zarba kuchi": "18 HP", "Joylashuvi": "2-G'or" },
-          },
-          {
-            id: 'rebreather',
-            name: { uz: 'Rebreather (Akvalang)', ru: 'Ребризер (Акваланг)', en: 'Rebreather' },
-            category: 'crafting',
-            tier: 'Maxsus Jihoz',
-            rarity: 'epic',
-            icon: '🤿',
-            description: {
-              uz: "Chuqur suv osti g'orlaridan suzib o'tish imkonini beruvchi kislorodli apparat.",
-              ru: "Позволяет исследовать глубокие подводные туннели и пещеры.",
-              en: "Allows prolonged underwater exploration in flooded cave systems.",
-            },
-            attributes: { "Vazifasi": "Suv osti nafasi", "Batareya": "Oksigen ballon" },
-          },
         ],
       },
     };
 
-    // If matches a known game source, import its items directly into the system
     if (sourcePresets[gameKey]) {
       const preset = sourcePresets[gameKey];
       const targetGameId = preset.gameMeta.id || 'game';
 
-      // Check if game already exists
       const existing = games.find((g) => g.id === targetGameId);
       if (existing) {
-        // Add new items that aren't already present
         const existingItemIds = new Set(existing.items.map((i) => i.id));
         const newItems = preset.items.filter((i) => !existingItemIds.has(i.id));
 
-        setGames((prev) =>
-          prev.map((g) => {
-            if (g.id === targetGameId) {
-              return {
-                ...g,
-                sourceUrl: sourceUrl,
-                items: [...newItems, ...g.items],
-              };
-            }
-            return g;
-          })
-        );
+        const updatedGame: Game = {
+          ...existing,
+          sourceUrl: sourceUrl,
+          items: [...newItems, ...existing.items],
+        };
+
+        updateGame(targetGameId, updatedGame);
 
         return {
           success: true,
           count: newItems.length,
           message: `"${existing.name}" o'yiniga manbadan (${sourceUrl}) ${newItems.length} ta yangi ma'lumot va retseptlar qo'shildi!`,
         };
-      } else {
-        // Create full game with items
-        const fullGame: Game = {
-          id: targetGameId,
-          name: customGameName || preset.gameMeta.name || 'Yangi O\'yin',
-          tagline: preset.gameMeta.tagline || { uz: 'Manbadan import qilindi', ru: 'Импортировано с вики', en: 'Imported from wiki' },
-          description: preset.gameMeta.description || { uz: '', ru: '', en: '' },
-          coverImage: preset.gameMeta.coverImage || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=800&q=80',
-          bannerImage: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1600&q=80',
-          genre: preset.gameMeta.genre || ['Survival'],
-          releaseYear: preset.gameMeta.releaseYear || '2024',
-          developer: preset.gameMeta.developer || 'Game Studio',
-          sourceUrl: sourceUrl,
-          categories: [
-            { id: 'resources', name: { uz: 'Resurslar & Minerallar', ru: 'Ресурсы и Руды', en: 'Resources & Ores' }, icon: '⛏️' },
-            { id: 'crafting', name: { uz: 'Asboblar & Qurollar', ru: 'Инструменты и Оружие', en: 'Tools & Weapons' }, icon: '⚔️' },
-            { id: 'machinery', name: { uz: 'Mexanizmlar & Mashinalar', ru: 'Машины и Техника', en: 'Machinery' }, icon: '⚙️' },
-            { id: 'locations', name: { uz: 'Xaritalar & Orollar', ru: 'Карты и Локации', en: 'Locations' }, icon: '🏝️' },
-            { id: 'creatures', name: { uz: 'Dushmanlar & Bosslar', ru: 'Существа и Враги', en: 'Creatures' }, icon: '🦈' },
-          ],
-          items: preset.items,
-        };
-
-        setGames((prev) => [fullGame, ...prev]);
-
-        return {
-          success: true,
-          count: preset.items.length,
-          message: `Yangi "${fullGame.name}" o'yini manbadan (${sourceUrl}) ${preset.items.length} ta tayyor maqolasi bilan bazaga qo'shildi!`,
-        };
       }
     }
-
-    // Generic fallback for any other wiki URL
-    const derivedName = customGameName || cleanUrl.replace(/https?:\/\//, '').split('.')[0].replace(/[^a-zA-Z0-9]/g, ' ').toUpperCase() || 'Yangi O\'yin';
-    const genericId = derivedName.toLowerCase().replace(/[^a-z0-9]/g, '-');
-
-    const genericGame: Game = {
-      id: genericId,
-      name: derivedName,
-      tagline: {
-        uz: `${sourceUrl} manbasidan import qilingan o'yin bazasi`,
-        ru: `Импортировано с официальной вики ${sourceUrl}`,
-        en: `Imported knowledge base from ${sourceUrl}`,
-      },
-      description: {
-        uz: `Ushbu o'yin ma'lumotlari ${sourceUrl} veb-saytidan tizimga ulandi. Barcha bo'limlar va maqolalar admin panel orqali to'ldiriladi.`,
-        ru: `Данные об игре синхронизированы с ${sourceUrl}.`,
-        en: `Game data synchronized with ${sourceUrl}.`,
-      },
-      coverImage: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=800&q=80',
-      bannerImage: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1600&q=80',
-      genre: ['Action', 'Adventure', 'Wiki'],
-      releaseYear: '2024',
-      developer: 'Game Publisher',
-      sourceUrl: sourceUrl,
-      categories: [
-        { id: 'general', name: { uz: 'Umumiy Ma\'lumotlar', ru: 'Общая информация', en: 'General Info' }, icon: '📖' },
-        { id: 'items', name: { uz: 'Buyumlar va Resurslar', ru: 'Предметы и Ресурсы', en: 'Items & Resources' }, icon: '🎒' },
-        { id: 'guides', name: { uz: 'O\'tish Qo\'llanmalari', ru: 'Гайды по прохождению', en: 'Walkthrough Guides' }, icon: '🗺️' },
-      ],
-      items: [
-        {
-          id: `item-${Date.now()}`,
-          name: { uz: `${derivedName} Asosiy Qo'llanma`, ru: `Основной гайд по ${derivedName}`, en: `${derivedName} Starter Guide` },
-          category: 'general',
-          tier: 'Boshlang\'ich',
-          rarity: 'common',
-          icon: '📖',
-          description: {
-            uz: `Manbadan olingan ma'lumot: Ushbu maqola ${sourceUrl} ssilkasi orqali tizimga avtomatik biriktirildi.`,
-            ru: `Статья автоматически синхронизирована с источником ${sourceUrl}.`,
-            en: `Starter guide automatically synchronized with source ${sourceUrl}.`,
-          },
-          attributes: { "Manba": sourceUrl, "Holat": "Faol Sinxronizatsiya" },
-          tips: { uz: "Admin panel orqali ushbu o'yinga qo'shimcha retsept va parametrlarni kiritishingiz mumkin.", ru: "Вы можете редактировать статью в панели администратора.", en: "You can edit this item in the Admin panel." },
-        },
-      ],
-    };
-
-    setGames((prev) => [genericGame, ...prev]);
 
     return {
       success: true,
       count: 1,
-      message: `"${derivedName}" o'yini manba ssilkasi (${sourceUrl}) bilan muvaffaqiyatli tizimga ulandi!`,
+      message: `Manba ssilkasi (${sourceUrl}) muvaffaqiyatli saqlandi!`,
     };
   };
 
@@ -546,6 +422,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         deleteNews,
         deleteWikiItem,
         importGameFromSource,
+        isFirebaseConnected,
+        setFirebaseConfig,
         t,
       }}
     >
