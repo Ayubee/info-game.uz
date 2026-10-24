@@ -88,13 +88,7 @@ export const Navbar: React.FC = () => {
               to="/news"
               className={`hover:text-[#00e5ff] transition-colors ${location.pathname.startsWith('/news') ? 'text-[#00e5ff] font-bold' : ''}`}
             >
-              {language === 'uz' ? "Yangiliklar" : language === 'ru' ? "Новости" : "News"}
-            </Link>
-            <Link
-              to="/games/raft"
-              className={`hover:text-[#00e5ff] transition-colors ${location.pathname.startsWith('/games') ? 'text-[#00e5ff] font-bold' : ''}`}
-            >
-              {language === 'uz' ? "Ensiklopediya" : language === 'ru' ? "Энциклопедия" : "Wiki"}
+              {language === 'uz' ? "Barcha Yangiliklar" : language === 'ru' ? "Все Новости" : "All News"}
             </Link>
           </nav>
 
@@ -150,41 +144,26 @@ export const Navbar: React.FC = () => {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Qidiruv..."
+                placeholder="Yangiliklardan qidiruv..."
                 className="w-full bg-[#050a12] border border-white/10 rounded-lg pl-9 pr-3 py-2 text-xs text-white"
               />
             </div>
           </form>
 
-          <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
-            Faol O'yin:
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            {games.map((g) => (
-              <button
-                key={g.id}
-                onClick={() => {
-                  handleGameSelect(g.id);
-                  setMobileMenuOpen(false);
-                }}
-                className={`p-2 rounded-lg text-xs font-semibold text-left truncate ${
-                  g.id === activeGame?.id ? 'bg-[#00e5ff]/20 text-[#00e5ff] border border-[#00e5ff]/40' : 'bg-[#060b13] text-slate-300'
-                }`}
-              >
-                {g.name}
-              </button>
-            ))}
-          </div>
-
-          <div className="border-t border-white/10 pt-3 flex flex-col gap-2 text-sm font-semibold text-slate-200">
-            <Link to="/" onClick={() => setMobileMenuOpen(false)} className="py-1 hover:text-[#00e5ff]">
+          <div className="flex flex-col gap-2">
+            <Link
+              to="/"
+              onClick={() => setMobileMenuOpen(false)}
+              className="px-3 py-2 rounded-lg text-xs font-bold text-slate-200 hover:bg-white/5"
+            >
               Bosh Sahifa
             </Link>
-            <Link to={`/games/${activeGame?.id || 'raft'}`} onClick={() => setMobileMenuOpen(false)} className="py-1 hover:text-[#00e5ff]">
-              O'yinlar Wiki (Ensiklopediyasi)
-            </Link>
-            <Link to="/news" onClick={() => setMobileMenuOpen(false)} className="py-1 hover:text-[#00e5ff]">
-              O'yin Yangiliklari
+            <Link
+              to="/news"
+              onClick={() => setMobileMenuOpen(false)}
+              className="px-3 py-2 rounded-lg text-xs font-bold text-[#00e5ff] hover:bg-white/5"
+            >
+              Barcha Yangiliklar
             </Link>
           </div>
         </div>

@@ -35,38 +35,22 @@ export const HomePage: React.FC = () => {
             GTA 6, CS2, Raft, Rust va boshqa o'yinlarning reliz sanalari, so'nggi treylerlari, yangilanishlari va rasmiy sharhlari o'zbek, rus va ingliz tillarida.
           </p>
 
-          {/* Quick Filter Pill Buttons */}
-          <div className="flex flex-wrap items-center justify-center gap-3">
+          {/* Quick News Filter Button */}
+          <div className="flex items-center justify-center">
             <Link
               to="/news"
-              className="bg-[#00e5ff] text-[#070e17] font-black text-xs px-5 py-2.5 rounded-xl hover:bg-[#38bdf8] transition-all shadow-lg shadow-[#00e5ff]/20 flex items-center gap-2"
+              className="bg-[#00e5ff] text-[#070e17] font-black text-sm px-6 py-3 rounded-xl hover:bg-[#38bdf8] transition-all shadow-lg shadow-[#00e5ff]/25 flex items-center gap-2 hover:scale-105"
             >
               <Newspaper className="w-4 h-4" />
-              <span>Barcha Yangiliklar</span>
+              <span>Barcha Yangiliklar Portaliga O'tish</span>
+              <ArrowRight className="w-4 h-4" />
             </Link>
-
-            {games.map((g) => (
-              <Link
-                key={g.id}
-                to={`/games/${g.id}`}
-                onClick={() => setSelectedGameId(g.id)}
-                className="flex items-center gap-2 bg-[#0c1626] hover:bg-[#12223d] border border-white/10 hover:border-[#00e5ff]/50 text-slate-200 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-md group"
-              >
-                <Gamepad2 className="w-4 h-4 text-[#00e5ff] group-hover:scale-110 transition-transform" />
-                <span>{g.name}</span>
-                {g.releaseDateExact && (
-                  <span className="text-[10px] bg-amber-500/10 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded font-mono">
-                    {g.releaseDateExact}
-                  </span>
-                )}
-              </Link>
-            ))}
           </div>
         </div>
       </section>
 
       {/* Main Content Area */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
         
         {/* ========================================================= */}
         {/* SECTION 1: LATEST NEWS & RELEASES (DIQQAT MARKAZI)        */}
@@ -87,7 +71,7 @@ export const HomePage: React.FC = () => {
               to="/news"
               className="text-xs font-bold text-[#00e5ff] hover:text-[#38bdf8] flex items-center gap-1 group"
             >
-              <span>Barcha Maqolalarni O'qish</span>
+              <span>Barcha Maqolalarni Ko'rish</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
@@ -212,80 +196,6 @@ export const HomePage: React.FC = () => {
               ))}
             </div>
           )}
-        </section>
-
-        {/* ========================================================= */}
-        {/* SECTION 2: GAMES ENCYCLOPEDIA & OVERVIEWS                 */}
-        {/* ========================================================= */}
-        <section className="space-y-6">
-          <div className="flex items-center justify-between border-b border-white/10 pb-4">
-            <div>
-              <div className="text-xs font-bold text-[#00e5ff] uppercase tracking-wider mb-1 flex items-center gap-2">
-                <BookOpen className="w-4 h-4" />
-                <span>O'yinlar Sharhlari & Ensiklopediya</span>
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-black text-white">
-                O'yinlar Katalogi
-              </h2>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {games.map((game) => (
-              <Link
-                key={game.id}
-                to={`/games/${game.id}`}
-                onClick={() => setSelectedGameId(game.id)}
-                className="group bg-[#0b1424] border border-white/10 hover:border-[#00e5ff]/50 rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 shadow-lg hover:shadow-[#00e5ff]/10 flex flex-col"
-              >
-                <div className="h-44 relative overflow-hidden bg-slate-900">
-                  <img
-                    src={game.coverImage}
-                    alt={game.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-80"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0b1424] via-transparent to-transparent" />
-                  
-                  {/* Status badge */}
-                  <span className="absolute top-3 right-3 text-[10px] font-bold bg-black/70 backdrop-blur-md border border-white/20 text-white px-2 py-1 rounded-md">
-                    {game.releaseDateExact || game.releaseYear}
-                  </span>
-
-                  {game.isUpcoming && (
-                    <span className="absolute top-3 left-3 text-[10px] font-bold bg-amber-500 text-black px-2 py-0.5 rounded shadow">
-                      Kutilmoqda
-                    </span>
-                  )}
-                </div>
-
-                <div className="p-5 flex-1 flex flex-col justify-between">
-                  <div>
-                    <h3 className="text-lg font-bold text-white group-hover:text-[#00e5ff] transition-colors mb-1">
-                      {game.name}
-                    </h3>
-                    <p className="text-slate-400 text-xs line-clamp-2 leading-relaxed mb-4">
-                      {t(game.tagline)}
-                    </p>
-                  </div>
-
-                  <div>
-                    <div className="flex flex-wrap gap-1.5 mb-4">
-                      {game.genre.slice(0, 3).map((gn, i) => (
-                        <span key={i} className="text-[10px] bg-white/5 text-slate-300 px-2 py-0.5 rounded">
-                          {gn}
-                        </span>
-                      ))}
-                    </div>
-
-                    <div className="pt-3 border-t border-white/10 flex items-center justify-between text-xs font-semibold text-[#00e5ff]">
-                      <span>Ensiklopediya & Sharh</span>
-                      <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
         </section>
 
       </div>
