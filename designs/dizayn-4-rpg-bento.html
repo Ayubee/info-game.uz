@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<title>Dizayn 4: RPG Inventory & Bento Grid | INFO-GAME.UZ</title>
+<style>
+  @page { size: 1440px 1020px; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', -apple-system, Roboto, sans-serif; }
+  body { background: #0f1115; color: #f1f5f9; width: 1440px; height: 1020px; overflow: hidden; position: relative; }
+
+  /* Concept info banner */
+  .concept-header { background: #181a20; border-bottom: 2px solid #f59e0b; padding: 10px 30px; display: flex; justify-content: space-between; align-items: center; }
+  .concept-title { font-size: 13px; font-weight: 800; color: #f59e0b; letter-spacing: 1px; text-transform: uppercase; }
+  .palette { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #94a3b8; }
+  .color-dot { width: 14px; height: 14px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.2); }
+  .concept-tags { display: flex; gap: 8px; }
+  .c-tag { background: rgba(245, 158, 11, 0.15); color: #fbbf24; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; border: 1px solid rgba(245, 158, 11, 0.3); }
+
+  /* Bento Navbar */
+  .bento-nav { height: 60px; background: rgba(24, 26, 32, 0.9); border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: space-between; padding: 0 30px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 800; color: #fff; }
+  .brand span { color: #f59e0b; }
+
+  /* Bento Grid Master */
+  .bento-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; grid-template-rows: repeat(2, 1fr); gap: 18px; padding: 20px 30px; height: calc(1020px - 110px); }
+
+  /* Bento Tile */
+  .b-tile { background: #16181f; border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 18px; position: relative; display: flex; flex-direction: column; overflow: hidden; }
+  .b-tile.highlight { border-color: rgba(245, 158, 11, 0.35); background: linear-gradient(145deg, #181b24, #12141a); }
+  .tile-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .tile-title { font-size: 13px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px; }
+  .tile-badge { font-size: 10px; background: rgba(245, 158, 11, 0.15); color: #fbbf24; padding: 2px 7px; border-radius: 4px; font-weight: 700; }
+
+  /* Tile 1: Interactive Radar Screen */
+  .radar-display { flex: 1; background: #090a0d; border-radius: 12px; border: 1px solid #1e293b; position: relative; display: flex; align-items: center; justify-content: center; }
+  .radar-circle { width: 220px; height: 220px; border-radius: 50%; border: 1px solid rgba(34, 197, 94, 0.25); position: absolute; }
+  .radar-circle-2 { width: 140px; height: 140px; border-radius: 50%; border: 1px solid rgba(34, 197, 94, 0.35); position: absolute; }
+  .radar-dot { width: 10px; height: 10px; background: #22c55e; border-radius: 50%; position: absolute; box-shadow: 0 0 10px #22c55e; }
+  .radar-cross-h { width: 100%; height: 1px; background: rgba(34, 197, 94, 0.15); position: absolute; }
+  .radar-cross-v { height: 100%; width: 1px; background: rgba(34, 197, 94, 0.15); position: absolute; }
+
+  /* Tile 2: Cooking Pot Slots */
+  .cook-slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
+  .slot { aspect-ratio: 1; background: #0c0d12; border: 1px solid #2d313d; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 20px; position: relative; }
+  .slot span.count { position: absolute; bottom: 4px; right: 6px; font-size: 10px; font-weight: 700; color: #fbbf24; }
+
+  /* Tile 3: Animal Drops */
+  .drop-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; background: #0c0d12; border-radius: 8px; margin-bottom: 6px; font-size: 12px; }
+  .drop-percent { color: #22c55e; font-weight: 700; }
+
+  /* Tile 4: Trading Currency */
+  .currency-card { background: #0c0d12; border-radius: 10px; padding: 12px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
+  .cur-icon { width: 36px; height: 36px; border-radius: 8px; background: #252834; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+</style>
+</head>
+<body>
+  <!-- Concept Header -->
+  <div class="concept-header">
+    <div class="concept-title">KONSEPTSIYA 4: RPG INVENTORY & BENTO GRID (Interaktiv UI)</div>
+    <div class="palette">
+      <span>Ranglar:</span>
+      <div class="color-dot" style="background: #0f1115;"></div>
+      <div class="color-dot" style="background: #181a20;"></div>
+      <div class="color-dot" style="background: #f59e0b;"></div>
+      <div class="color-dot" style="background: #22c55e;"></div>
+    </div>
+    <div class="concept-tags">
+      <span class="c-tag">Bento Box Grid</span>
+      <span class="c-tag">Slot-based Crafter</span>
+      <span class="c-tag">Interaktiv Modullar</span>
+      <span class="c-tag">RPG Gamifikatsiya</span>
+    </div>
+  </div>
+
+  <!-- Bento Nav -->
+  <div class="bento-nav">
+    <div class="brand">
+      <span>🧭 INFO-GAME</span>
+      <span style="font-size: 14px; color: #94a3b8; font-weight: normal;">| Bento Dashboard</span>
+    </div>
+
+    <div style="display: flex; gap: 14px; font-size: 12px;">
+      <span style="color: #fbbf24;">⚡ Sol Og'irligi: 320 blok</span>
+      <span style="color: #38bdf8;">💧 Suv Zaxirasi: 100%</span>
+      <span style="color: #4ade80;">🍖 Ozuqa: To'liq</span>
+    </div>
+  </div>
+
+  <!-- Bento Grid -->
+  <div class="bento-grid">
+    <!-- Tile 1 (Big): Radar & Story Navigation -->
+    <div class="b-tile highlight" style="grid-row: span 2;">
+      <div class="tile-header">
+        <div class="tile-title">
+          <span>📡</span>
+          <span>Interaktiv Radar & Syujet Xaritasi</span>
+        </div>
+        <span class="tile-badge">LIVE RADAR</span>
+      </div>
+
+      <div class="radar-display">
+        <div class="radar-cross-h"></div>
+        <div class="radar-cross-v"></div>
+        <div class="radar-circle"></div>
+        <div class="radar-circle-2"></div>
+        
+        <!-- Blips -->
+        <div class="radar-dot" style="top: 35%; left: 62%;"></div>
+        <div style="position: absolute; top: 38%; left: 65%; font-size: 10px; color: #4ade80; font-weight: 700;">Vasagatan (#2451)</div>
+
+        <div class="radar-dot" style="top: 70%; left: 30%; background: #00e5ff; box-shadow: 0 0 10px #00e5ff;"></div>
+        <div style="position: absolute; top: 73%; left: 32%; font-size: 10px; color: #00e5ff; font-weight: 700;">Tangaroa (#3180)</div>
+      </div>
+
+      <div style="margin-top: 14px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; font-size: 11px;">
+        <div style="background: #090a0d; padding: 8px; border-radius: 6px;">
+          <div style="color: #94a3b8;">Hozirgi Masofa</div>
+          <div style="font-weight: 700; color: #fff;">450 metr</div>
+        </div>
+        <div style="background: #090a0d; padding: 8px; border-radius: 6px;">
+          <div style="color: #94a3b8;">Shamol Yo'nalishi</div>
+          <div style="font-weight: 700; color: #fbbf24;">Shimoliy-Sharq</div>
+        </div>
+        <div style="background: #090a0d; padding: 8px; border-radius: 6px;">
+          <div style="color: #94a3b8;">Dvigatellar</div>
+          <div style="font-weight: 700; color: #4ade80;">2x Ishlamoqda</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tile 2: Cooking Pot Simulator -->
+    <div class="b-tile" style="grid-column: span 2;">
+      <div class="tile-header">
+        <div class="tile-title">
+          <span>🍲</span>
+          <span>Oshpazlik Qozoni Simulyatori (Cooking Pot)</span>
+        </div>
+        <span class="tile-badge">SLOT RETSEPT</span>
+      </div>
+
+      <div class="cook-slots">
+        <div class="slot">🦈<span class="count">x1</span></div>
+        <div class="slot">🦈<span class="count">x1</span></div>
+        <div class="slot">🍄<span class="count">x1</span></div>
+        <div class="slot">🐟<span class="count">x1</span></div>
+      </div>
+
+      <div style="background: #0c0d12; border-radius: 8px; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <div style="font-size: 12px; font-weight: 700; color: #fff;">Natija: Shark Dinner</div>
+          <div style="font-size: 11px; color: #4ade80;">Bonus: +100 To'qlik, +50 Zaxira HP</div>
+        </div>
+        <div style="font-size: 11px; background: #f59e0b; color: #0f1115; font-weight: 700; padding: 4px 10px; border-radius: 6px;">Tayyorlash: 25s</div>
+      </div>
+    </div>
+
+    <!-- Tile 3: Animal Drops -->
+    <div class="b-tile">
+      <div class="tile-header">
+        <div class="tile-title">
+          <span>🦙</span>
+          <span>Jonivorlar & Drop %</span>
+        </div>
+      </div>
+
+      <div class="drop-row">
+        <span>Llama (Xonaki)</span>
+        <span class="drop-percent">100% Jun</span>
+      </div>
+      <div class="drop-row">
+        <span>Echki (Goat)</span>
+        <span class="drop-percent">Kunlik Sut</span>
+      </div>
+      <div class="drop-row">
+        <span>Akula (Bryus)</span>
+        <span class="drop-percent">4x Go'sht, 1x Kalla</span>
+      </div>
+    </div>
+
+    <!-- Tile 4: Trading Currency -->
+    <div class="b-tile">
+      <div class="tile-header">
+        <div class="tile-title">
+          <span>🪙</span>
+          <span>Savdo Valyutalari</span>
+        </div>
+      </div>
+
+      <div class="currency-card">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div class="cur-icon">📦</div>
+          <div>
+            <div style="font-size: 12px; font-weight: 700;">Trash Cube</div>
+            <div style="font-size: 10px; color: #94a3b8;">Qayta ishlangan chiqindi</div>
+          </div>
+        </div>
+        <div style="font-size: 12px; font-weight: 700; color: #fbbf24;">Recycler</div>
+      </div>
+
+      <div class="currency-card">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div class="cur-icon">🪙</div>
+          <div>
+            <div style="font-size: 12px; font-weight: 700;">Trade Coin</div>
+            <div style="font-size: 10px; color: #94a3b8;">Savdogar tangalari</div>
+          </div>
+        </div>
+        <div style="font-size: 12px; font-weight: 700; color: #4ade80;">Tier 3</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

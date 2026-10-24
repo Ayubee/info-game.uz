@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<title>Dizayn 2: Cyber HUD & High-Tech Gamer | INFO-GAME.UZ</title>
+<style>
+  @page { size: 1440px 1020px; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Consolas', 'Courier New', 'Segoe UI', monospace; }
+  body { background: #08090d; color: #e0e7ff; width: 1440px; height: 1020px; overflow: hidden; position: relative; }
+  
+  /* Cyber Grid Background */
+  .grid-bg { position: absolute; inset: 0; background-image: linear-gradient(rgba(0, 255, 204, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 204, 0.03) 1px, transparent 1px); background-size: 30px 30px; pointer-events: none; }
+  
+  /* Concept info banner */
+  .concept-header { background: #0e0f17; border-bottom: 2px solid #00ffcc; padding: 10px 30px; display: flex; justify-content: space-between; align-items: center; }
+  .concept-title { font-size: 13px; font-weight: 800; color: #00ffcc; letter-spacing: 2px; text-transform: uppercase; }
+  .palette { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #94a3b8; }
+  .color-dot { width: 14px; height: 14px; border-radius: 3px; border: 1px solid rgba(255,255,255,0.2); }
+  .concept-tags { display: flex; gap: 8px; }
+  .c-tag { background: rgba(0, 255, 204, 0.1); color: #00ffcc; padding: 3px 8px; border: 1px solid rgba(0, 255, 204, 0.3); font-size: 10px; font-weight: 700; }
+
+  /* Cyber HUD Top Bar */
+  .hud-top { height: 60px; background: rgba(14, 16, 24, 0.95); border-bottom: 1px solid rgba(0, 255, 204, 0.2); display: flex; align-items: center; justify-content: space-between; padding: 0 30px; }
+  .hud-brand { display: flex; align-items: center; gap: 12px; }
+  .hud-glitch { font-size: 20px; font-weight: 900; color: #fff; letter-spacing: 1px; }
+  .hud-glitch span { color: #00ffcc; text-shadow: 0 0 10px rgba(0, 255, 204, 0.8); }
+  .hud-status { display: flex; gap: 14px; font-size: 11px; color: #94a3b8; }
+  .hud-status-item { display: flex; align-items: center; gap: 5px; }
+  .status-light { width: 8px; height: 8px; background: #00ffcc; border-radius: 50%; box-shadow: 0 0 8px #00ffcc; }
+
+  .hud-search { width: 500px; height: 38px; background: #050608; border: 1px solid #00ffcc; display: flex; align-items: center; padding: 0 12px; gap: 10px; font-size: 12px; color: #00ffcc; clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%); }
+  .hud-search input { background: transparent; border: none; outline: none; color: #00ffcc; font-family: monospace; font-size: 12px; width: 100%; }
+
+  /* Main HUD Layout */
+  .hud-body { display: grid; grid-template-columns: 320px 1fr 340px; gap: 18px; padding: 20px 30px; height: calc(1020px - 140px); }
+
+  /* Angled Container */
+  .hud-box { background: rgba(14, 16, 24, 0.85); border: 1px solid rgba(0, 255, 204, 0.25); border-radius: 4px; padding: 16px; position: relative; }
+  .hud-box::before { content: ''; position: absolute; top: -1px; left: -1px; width: 10px; height: 10px; border-top: 2px solid #00ffcc; border-left: 2px solid #00ffcc; }
+  .hud-box::after { content: ''; position: absolute; bottom: -1px; right: -1px; width: 10px; height: 10px; border-bottom: 2px solid #00ffcc; border-right: 2px solid #00ffcc; }
+  .box-title { font-size: 12px; font-weight: 800; color: #00ffcc; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px; display: flex; justify-content: space-between; border-bottom: 1px solid rgba(0,255,204,0.15); padding-bottom: 6px; }
+
+  /* Left: Crafting Calculator Simulator */
+  .calc-target { background: #08090d; border: 1px solid rgba(255, 0, 85, 0.4); padding: 12px; margin-bottom: 14px; }
+  .calc-target-header { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: #ff0055; margin-bottom: 6px; }
+  .tree-branch { font-size: 11px; color: #a5b4fc; margin-left: 10px; line-height: 1.8; border-left: 1px dashed rgba(0,255,204,0.3); padding-left: 10px; }
+
+  .stat-progress { margin-top: 10px; font-size: 11px; }
+  .progress-bar-bg { width: 100%; height: 6px; background: #1e1b4b; border-radius: 3px; overflow: hidden; margin-top: 4px; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #00ffcc, #38bdf8); width: 75%; }
+
+  /* Center: Interactive Tier Matrix */
+  .center-grid { display: flex; flex-direction: column; gap: 16px; }
+  .tier-row { background: #08090d; border: 1px solid rgba(255,255,255,0.08); padding: 12px; display: flex; align-items: center; gap: 14px; position: relative; }
+  .tier-badge-big { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 900; border-radius: 4px; }
+  .s-rank { background: rgba(255, 0, 85, 0.2); border: 2px solid #ff0055; color: #ff0055; text-shadow: 0 0 10px #ff0055; }
+  .a-rank { background: rgba(0, 255, 204, 0.2); border: 2px solid #00ffcc; color: #00ffcc; text-shadow: 0 0 10px #00ffcc; }
+  .b-rank { background: rgba(56, 189, 248, 0.2); border: 2px solid #38bdf8; color: #38bdf8; }
+
+  .tier-info { flex: 1; }
+  .tier-title { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+  .tier-stat-bars { display: flex; gap: 20px; font-size: 11px; color: #94a3b8; }
+
+  /* Right: Boss Combat HUD */
+  .boss-card { background: #090a10; border: 1px solid #ff0055; padding: 12px; margin-bottom: 12px; }
+  .boss-name { font-size: 13px; font-weight: 800; color: #ff0055; display: flex; justify-content: space-between; }
+  .boss-hp { font-size: 11px; color: #fda4af; margin: 4px 0 8px 0; }
+  .boss-phase { font-size: 10px; background: rgba(255,0,85,0.15); border-left: 2px solid #ff0055; padding: 6px; margin-bottom: 6px; color: #e2e8f0; }
+
+  .action-btn-neon { background: #00ffcc; color: #050608; border: none; padding: 10px; font-weight: 900; font-family: monospace; font-size: 12px; text-transform: uppercase; cursor: pointer; letter-spacing: 1px; width: 100%; text-align: center; clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%); }
+</style>
+</head>
+<body>
+  <div class="grid-bg"></div>
+
+  <!-- Concept Header -->
+  <div class="concept-header">
+    <div class="concept-title">KONSEPTSIYA 2: CYBERPUNK / HIGH-TECH GAMER HUD (Taktik Portal)</div>
+    <div class="palette">
+      <span>Ranglar:</span>
+      <div class="color-dot" style="background: #08090d;"></div>
+      <div class="color-dot" style="background: #00ffcc;"></div>
+      <div class="color-dot" style="background: #ff0055;"></div>
+      <div class="color-dot" style="background: #8b5cf6;"></div>
+    </div>
+    <div class="concept-tags">
+      <span class="c-tag">Neon HUD</span>
+      <span class="c-tag">Angled Borders</span>
+      <span class="c-tag">Kalkulyator Fokus</span>
+      <span class="c-tag">Gamer Estetika</span>
+    </div>
+  </div>
+
+  <!-- HUD Top Bar -->
+  <div class="hud-top">
+    <div class="hud-brand">
+      <div class="hud-glitch">INFO-GAME // <span>CORE_V2</span></div>
+    </div>
+
+    <div class="hud-search">
+      <span>&gt;_</span>
+      <input type="text" value="SEARCH: TITANIUM INGOT // CRAFTING_ID: #4092" readonly>
+      <span style="font-size: 10px; background: #00ffcc22; padding: 2px 5px;">ENTER</span>
+    </div>
+
+    <div class="hud-status">
+      <div class="hud-status-item">
+        <div class="status-light"></div>
+        <span>SYSTEM: ONLINE</span>
+      </div>
+      <div class="hud-status-item">
+        <span>ITEMS: 1,420</span>
+      </div>
+      <div class="hud-status-item">
+        <span>LOC: UZ-TAS</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Body -->
+  <div class="hud-body">
+    <!-- Left: Crafting Calculator Simulator -->
+    <div class="hud-box">
+      <div class="box-title">
+        <span>[01] RESURS KALKULYATORI</span>
+        <span style="color: #ff0055;">LIVE_CALC</span>
+      </div>
+
+      <div class="calc-target">
+        <div class="calc-target-header">
+          <span>MAQSAD: METAL SPEAR</span>
+          <span>TIER: A</span>
+        </div>
+        <div style="font-size: 10px; color: #94a3b8; margin-bottom: 8px;">Dushmanlarga 15 DPS yetkazuvchi asosiy jangovar qurol.</div>
+
+        <div class="tree-branch">
+          <div>├─ 1x Wooden Spear</div>
+          <div style="padding-left: 12px; color: #64748b;">├─ 6x Plank (Taxta) [4/6] ⚠️</div>
+          <div style="padding-left: 12px; color: #64748b;">└─ 1x Rope (Arqon) [✔ BOR]</div>
+          <div>├─ 3x Scrap (Temir-tersak) [✔ 8/3]</div>
+          <div>└─ 1x Bolt (Boltcha) [✔ 2/1]</div>
+        </div>
+
+        <div class="stat-progress">
+          <div style="display: flex; justify-content: space-between;">
+            <span>Resurslar yetarliligi:</span>
+            <span style="color: #00ffcc;">85%</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div class="progress-fill"></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="font-size: 11px; color: #94a3b8; line-height: 1.6; margin-bottom: 14px;">
+        <div>⚠️ <strong>Yetishmayotgan xomashyo:</strong></div>
+        <div style="color: #fda4af;">- 2x Plank (Okeandan ilmoq bilan yig'ing)</div>
+      </div>
+
+      <button class="action-btn-neon">SOL RO'YXATIGA QO'SHISH [+]</button>
+    </div>
+
+    <!-- Center: Tier Matrix & Weapons HUD -->
+    <div class="center-grid">
+      <div class="hud-box" style="flex: 1;">
+        <div class="box-title">
+          <span>[02] QUROLLAR & ASBOBLAR REYTINGI (TIER LIST)</span>
+          <span style="color: #00ffcc;">PATCH_1.09</span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <!-- S Rank -->
+          <div class="tier-row">
+            <div class="tier-badge-big s-rank">S</div>
+            <div class="tier-info">
+              <div class="tier-title">Titanium Sword (Titan Qilichi)</div>
+              <div style="font-size: 11px; color: #94a3b8; margin-bottom: 4px;">Zarba kuchi: 20 HP | Chidamlilik: 170 zarba | Tebranish: Tez</div>
+              <div class="tier-stat-bars">
+                <span>Zarba: ██████████ 100%</span>
+                <span style="color: #ff0055;">Narx: 3x Titanium Ingot</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- A Rank -->
+          <div class="tier-row">
+            <div class="tier-badge-big a-rank">A</div>
+            <div class="tier-info">
+              <div class="tier-title">Metal Spear (Temir Nayza)</div>
+              <div style="font-size: 11px; color: #94a3b8; margin-bottom: 4px;">Zarba kuchi: 15 HP | Chidamlilik: 120 zarba | Masofa: Uzoq</div>
+              <div class="tier-stat-bars">
+                <span>Zarba: ███████░░░ 75%</span>
+                <span style="color: #00ffcc;">Narx: 3x Scrap, 1x Bolt</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- B Rank -->
+          <div class="tier-row">
+            <div class="tier-badge-big b-rank">B</div>
+            <div class="tier-info">
+              <div class="tier-title">Wooden Spear (Yog'och Nayza)</div>
+              <div style="font-size: 11px; color: #94a3b8; margin-bottom: 4px;">Zarba kuchi: 10 HP | Chidamlilik: 50 zarba | Oson yasaladi</div>
+              <div class="tier-stat-bars">
+                <span>Zarba: ████░░░░░░ 50%</span>
+                <span style="color: #38bdf8;">Narx: 6x Plank, 1x Rope</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Boss Combat HUD -->
+    <div class="hud-box">
+      <div class="box-title">
+        <span>[03] BOSS JANGI TAKTIKASI</span>
+        <span style="color: #ff0055;">ALERT</span>
+      </div>
+
+      <div class="boss-card">
+        <div class="boss-name">
+          <span>RHINO SHARK</span>
+          <span>CHAPTER 3</span>
+        </div>
+        <div class="boss-hp">HP: IMMUNE (Portlatish kerak) | JOY: Varuna Point</div>
+        
+        <div class="boss-phase">
+          <strong>1-Bosqich:</strong> Ustunlar orqasiga suzing va akula kelib urilishini kuting.
+        </div>
+        <div class="boss-phase">
+          <strong>2-Bosqich:</strong> Portlovchi bochkani hosil bo'lgan yoriqqa joylashtiring.
+        </div>
+        <div class="boss-phase">
+          <strong>3-Bosqich:</strong> 3 marta takrorlangandan so'ng xazina xonasi ochiladi.
+        </div>
+      </div>
+
+      <div style="background: rgba(0,255,204,0.06); border: 1px dashed rgba(0,255,204,0.3); padding: 10px; font-size: 11px;">
+        <div style="color: #00ffcc; font-weight: 700; margin-bottom: 4px;">⚡ TEZKOR TUGMALAR:</div>
+        <div style="color: #cbd5e1; line-height: 1.6;">
+          <div>[1] Oziq-ovqat Bufflari</div>
+          <div>[2] Suv Tizimi Avtomatika</div>
+          <div>[3] Dvigatel Quvvati Hisobi</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
