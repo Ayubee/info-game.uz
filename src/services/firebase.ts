@@ -15,7 +15,17 @@ export interface FirebaseConfig {
   appId?: string;
 }
 
-// 1. Get configuration either from localStorage (set via Admin UI) or from Vite env variables
+// Default built-in Firebase project configuration (can be overridden via Admin UI or .env)
+export const DEFAULT_FIREBASE_CONFIG: FirebaseConfig = {
+  apiKey: "AIzaSyAKyMX3wQZPIPEFSh2e3eGAF61-acVFs6s",
+  authDomain: "info-game-uz.firebaseapp.com",
+  projectId: "info-game-uz",
+  storageBucket: "info-game-uz.firebasestorage.app",
+  messagingSenderId: "783025127746",
+  appId: "1:783025127746:web:f49605d1164c7eeba948db"
+};
+
+// 1. Get configuration either from localStorage (set via Admin UI), from Vite env, or fallback to DEFAULT
 export const getActiveFirebaseConfig = (): FirebaseConfig | null => {
   const localSaved = localStorage.getItem('info_game_firebase_config');
   if (localSaved) {
@@ -29,7 +39,7 @@ export const getActiveFirebaseConfig = (): FirebaseConfig | null => {
     }
   }
 
-  // Fallback to import.meta.env if provided in Vercel
+  // Check Vite env variables if provided
   const envApiKey = import.meta.env.VITE_FIREBASE_API_KEY;
   const envProjectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
   if (envApiKey && envProjectId) {
@@ -42,7 +52,8 @@ export const getActiveFirebaseConfig = (): FirebaseConfig | null => {
     };
   }
 
-  return null;
+  // Return default Firebase project configuration
+  return DEFAULT_FIREBASE_CONFIG;
 };
 
 let dbInstance: Firestore | null = null;
