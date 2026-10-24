@@ -277,7 +277,7 @@ export const GameWikiPage: React.FC = () => {
               {activeTab === 'overview' && (
                 <div className="space-y-6">
                   {/* Attributes Grid */}
-                  {activeItem.attributes && (
+                  {activeItem.attributes && Object.keys(activeItem.attributes).length > 0 && (
                     <div>
                       <div className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-3">
                         Asosiy Ko'rsatkichlar
@@ -315,7 +315,7 @@ export const GameWikiPage: React.FC = () => {
               {/* Tab 2: Recipe & Crafting */}
               {activeTab === 'recipe' && (
                 <div className="space-y-4">
-                  {activeItem.recipe ? (
+                  {activeItem.recipe && activeItem.recipe.ingredients && activeItem.recipe.ingredients.length > 0 ? (
                     <div>
                       <div className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-3">
                         Kerakli Komponentlar & Dastgoh
@@ -354,7 +354,7 @@ export const GameWikiPage: React.FC = () => {
                     </div>
                   ) : (
                     <div className="text-center py-8 text-xs text-slate-400 bg-[#070e17] rounded-xl border border-white/5">
-                      Ushbu element xomashyodan yasalmaydi (Dunyodan teriladi yoki maxsus o'ljadan tushadi).
+                      Ushbu o'yinda hunarmandchilik / crafting tizimi mavjud emas yoki bu buyum uchun retsept talab qilinmaydi.
                     </div>
                   )}
                 </div>
@@ -370,8 +370,66 @@ export const GameWikiPage: React.FC = () => {
               )}
             </div>
           ) : (
-            <div className="bg-[#0b1424] border border-white/10 rounded-2xl p-12 text-center text-slate-400 text-sm">
-              Chap tomondan ma'lumot ko'rmoqchi bo'lgan buyumni tanlang.
+            /* Game Overview when no wiki item is added or selected yet (e.g. GTA 6 before release) */
+            <div className="bg-[#0b1424] border border-white/10 rounded-2xl p-6 space-y-6">
+              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                <div>
+                  <div className="text-xs font-bold text-[#00e5ff] uppercase tracking-wider mb-1">
+                    {game.isUpcoming ? "⏳ Chiqishi Kutilayotgan O'yin Sharhi" : "Ensiklopediya & Umumiy Ma'lumot"}
+                  </div>
+                  <h2 className="text-2xl font-black text-white">{game.name}</h2>
+                </div>
+                {game.releaseDateExact && (
+                  <div className="bg-amber-500/10 border border-amber-500/30 px-3 py-1 rounded-xl text-right">
+                    <span className="text-[10px] text-amber-400 font-bold block">RELIZ SANASI</span>
+                    <span className="text-xs font-black text-white">{game.releaseDateExact}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Cover / Banner image if available */}
+              {game.coverImage && (
+                <div className="rounded-xl overflow-hidden max-h-72 border border-white/10">
+                  <img src={game.coverImage} alt={game.name} className="w-full h-full object-cover" />
+                </div>
+              )}
+
+              {/* Overview / Story Content */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-bold text-slate-200">O'yin Haqida Tafsilotlar:</h3>
+                <div className="bg-[#070e17] border border-white/5 rounded-xl p-4 text-xs text-slate-300 leading-relaxed whitespace-pre-line">
+                  {game.overviewArticle ? t(game.overviewArticle) : (game.description ? t(game.description) : t(game.tagline))}
+                </div>
+              </div>
+
+              {/* Quick Metadata Box */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
+                <div className="bg-[#070e17] border border-white/5 rounded-xl p-3">
+                  <span className="text-[10px] text-slate-400 uppercase font-bold block mb-0.5">Ishlab chiqaruvchi</span>
+                  <span className="text-xs font-bold text-white">{game.developer || "Rockstar Games"}</span>
+                </div>
+                <div className="bg-[#070e17] border border-white/5 rounded-xl p-3">
+                  <span className="text-[10px] text-slate-400 uppercase font-bold block mb-0.5">Chiqarilish Yili</span>
+                  <span className="text-xs font-bold text-[#00e5ff]">{game.releaseDateExact || game.releaseYear}</span>
+                </div>
+                <div className="bg-[#070e17] border border-white/5 rounded-xl p-3 col-span-2 sm:col-span-1">
+                  <span className="text-[10px] text-slate-400 uppercase font-bold block mb-0.5">Janrlar</span>
+                  <span className="text-xs font-bold text-white truncate block">{game.genre.join(', ')}</span>
+                </div>
+              </div>
+
+              {/* Notice */}
+              <div className="bg-[#00e5ff]/5 border border-[#00e5ff]/20 rounded-xl p-4 flex items-center justify-between">
+                <div className="text-xs text-slate-300">
+                  <strong className="text-[#00e5ff]">Eslatma:</strong> O'yin chiqqandan so'ng xaritalar, qurollar va barcha maxsus ma'lumotlar ushbu bo'limga qo'shib boriladi.
+                </div>
+                <Link
+                  to="/admin"
+                  className="bg-[#00e5ff]/10 hover:bg-[#00e5ff]/20 text-[#00e5ff] text-xs font-bold px-3 py-1.5 rounded-lg border border-[#00e5ff]/30 transition-colors ml-4 flex-shrink-0"
+                >
+                  + Ma'lumot qo'shish
+                </Link>
+              </div>
             </div>
           )}
         </main>

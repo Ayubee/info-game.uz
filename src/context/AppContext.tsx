@@ -132,6 +132,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       releaseYear: newGame.releaseYear || new Date().getFullYear().toString(),
       developer: newGame.developer || 'Noma\'lum',
       sourceUrl: newGame.sourceUrl || '',
+      releaseDateExact: newGame.releaseDateExact || '',
+      isUpcoming: newGame.isUpcoming || false,
+      overviewArticle: newGame.overviewArticle || newGame.description || { uz: '', ru: '', en: '' },
       categories: newGame.categories || [
         { id: 'resources', name: { uz: 'Resurslar & Minerallar', ru: 'Ресурсы и Руды', en: 'Resources & Ores' }, icon: '⛏️' },
         { id: 'crafting', name: { uz: 'Asboblar & Qurollar', ru: 'Инструменты и Оружие', en: 'Tools & Weapons' }, icon: '⚔️' },
@@ -162,6 +165,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       author: newArticle.author || 'Admin',
       date: new Date().toISOString().split('T')[0],
       views: 1,
+      expectedReleaseDate: newArticle.expectedReleaseDate || '',
     };
 
     setNews((prev) => [article, ...prev]);

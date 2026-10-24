@@ -45,6 +45,9 @@ export interface Game {
   active?: boolean;
   categories: WikiCategory[];
   items: WikiItem[];
+  releaseDateExact?: string; // e.g. "Kuz 2025" or exact date
+  isUpcoming?: boolean; // Chiqishi kutilayotgan o'yin
+  overviewArticle?: LocalizedString; // Ensiklopediya sahifasida chiqadigan umumiy katta maqola/sharh
 }
 
 export interface NewsArticle {
@@ -60,4 +63,5 @@ export interface NewsArticle {
   author: string;
   date: string;
   views: number;
+  expectedReleaseDate?: string; // Yangilikda o'yinning kutilayotgan reliz sanasi (ixtiyoriy)
 }

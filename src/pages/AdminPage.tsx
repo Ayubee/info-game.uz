@@ -78,13 +78,16 @@ export const AdminPage: React.FC = () => {
 
   // Form State: Add Game
   const [gameName, setGameName] = useState('');
-  const [gameYear, setGameYear] = useState('2024');
+  const [gameYear, setGameYear] = useState('2025');
   const [gameDeveloper, setGameDeveloper] = useState('');
-  const [gameGenres, setGameGenres] = useState('Survival, Action, Open World');
+  const [gameGenres, setGameGenres] = useState('Action, Open World, Shooter');
   const [gameCover, setGameCover] = useState<string>('');
   const [gameSourceUrl, setGameSourceUrl] = useState('');
   const [gameTaglineUz, setGameTaglineUz] = useState('');
   const [gameDescUz, setGameDescUz] = useState('');
+  const [gameReleaseDateExact, setGameReleaseDateExact] = useState('Kuz 2025');
+  const [gameIsUpcoming, setGameIsUpcoming] = useState(false);
+  const [gameOverviewArticleUz, setGameOverviewArticleUz] = useState('');
 
   // Form State: Add News
   const [newsTitleUz, setNewsTitleUz] = useState('');
@@ -95,6 +98,7 @@ export const AdminPage: React.FC = () => {
   const [newsGameId, setNewsGameId] = useState('raft');
   const [newsTags, setNewsTags] = useState('Patch, Reliz, O\'yinlar');
   const [newsAuthor, setNewsAuthor] = useState('Bosh Muharrir');
+  const [newsExpectedReleaseDate, setNewsExpectedReleaseDate] = useState('');
 
   // Form State: Add Wiki Item
   const [wikiGameId, setWikiGameId] = useState('raft');
@@ -150,6 +154,9 @@ export const AdminPage: React.FC = () => {
       sourceUrl: gameSourceUrl.trim() || undefined,
       tagline: { uz: gameTaglineUz || gameName, ru: gameName, en: gameName },
       description: { uz: gameDescUz || '', ru: '', en: '' },
+      releaseDateExact: gameReleaseDateExact.trim() || undefined,
+      isUpcoming: gameIsUpcoming,
+      overviewArticle: gameOverviewArticleUz.trim() ? { uz: gameOverviewArticleUz, ru: gameOverviewArticleUz, en: gameOverviewArticleUz } : undefined,
     });
 
     setGameName('');
@@ -157,6 +164,7 @@ export const AdminPage: React.FC = () => {
     setGameTaglineUz('');
     setGameDescUz('');
     setGameSourceUrl('');
+    setGameOverviewArticleUz('');
     showNotification("Yangi o'yin muvaffaqiyatli qo'shildi!");
   };
 
@@ -173,6 +181,7 @@ export const AdminPage: React.FC = () => {
       gameId: newsGameId,
       tags: newsTags.split(',').map((t) => t.trim()),
       author: newsAuthor,
+      expectedReleaseDate: newsExpectedReleaseDate.trim() || undefined,
     });
 
     setNewsTitleUz('');
@@ -180,6 +189,7 @@ export const AdminPage: React.FC = () => {
     setNewsContentUz('');
     setNewsCover('');
     setNewsVideoUrl('');
+    setNewsExpectedReleaseDate('');
     showNotification("Yangilik muvaffaqiyatli chop etildi!");
   };
 
@@ -601,19 +611,35 @@ export const AdminPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Optional Video Link */}
-              <div>
-                <label className="text-xs font-bold text-slate-300 flex items-center gap-1.5 mb-1">
-                  <Video className="w-3.5 h-3.5 text-[#ff4655]" />
-                  <span>Video Ssilka (YouTube Embed, ixtiyoriy)</span>
-                </label>
-                <input
-                  type="url"
-                  value={newsVideoUrl}
-                  onChange={(e) => setNewsVideoUrl(e.target.value)}
-                  placeholder="https://www.youtube.com/embed/..."
-                  className="w-full bg-[#070e17] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-[#00e5ff]"
-                />
+              {/* Optional Video Link & Expected Release Date */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-bold text-slate-300 flex items-center gap-1.5 mb-1">
+                    <Video className="w-3.5 h-3.5 text-[#ff4655]" />
+                    <span>Video Ssilka (YouTube Embed, ixtiyoriy)</span>
+                  </label>
+                  <input
+                    type="url"
+                    value={newsVideoUrl}
+                    onChange={(e) => setNewsVideoUrl(e.target.value)}
+                    placeholder="https://www.youtube.com/embed/..."
+                    className="w-full bg-[#070e17] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-[#00e5ff]"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-amber-400 flex items-center gap-1.5 mb-1">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>O'yin Chiqish Sanasi (Ixtiyoriy, masalan: "Kuz 2025")</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={newsExpectedReleaseDate}
+                    onChange={(e) => setNewsExpectedReleaseDate(e.target.value)}
+                    placeholder="Kuz 2025, 2026-yil 1-chorak..."
+                    className="w-full bg-[#070e17] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-amber-400"
+                  />
+                </div>
               </div>
 
               {/* Title & Texts */}
@@ -742,12 +768,24 @@ export const AdminPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-slate-300 block mb-1">Chiqarilgan Yili</label>
+                  <label className="text-xs font-bold text-slate-300 block mb-1">Chiqarilgan Yili / Kutilayotgan Vaqt</label>
                   <input
                     type="text"
                     value={gameYear}
                     onChange={(e) => setGameYear(e.target.value)}
+                    placeholder="2025 yoki Kuz 2025"
                     className="w-full bg-[#070e17] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-amber-400 block mb-1">Aniq Reliz Sanasi (Ixtiyoriy)</label>
+                  <input
+                    type="text"
+                    value={gameReleaseDateExact}
+                    onChange={(e) => setGameReleaseDateExact(e.target.value)}
+                    placeholder="Kuz 2025, 17-Sentyabr 2025..."
+                    className="w-full bg-[#070e17] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-amber-400"
                   />
                 </div>
 
@@ -757,6 +795,7 @@ export const AdminPage: React.FC = () => {
                     type="text"
                     value={gameDeveloper}
                     onChange={(e) => setGameDeveloper(e.target.value)}
+                    placeholder="Rockstar Games, Valve..."
                     className="w-full bg-[#070e17] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none"
                   />
                 </div>
@@ -768,6 +807,34 @@ export const AdminPage: React.FC = () => {
                     value={gameGenres}
                     onChange={(e) => setGameGenres(e.target.value)}
                     className="w-full bg-[#070e17] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Upcoming checkbox & Large Overview Article */}
+              <div className="bg-[#070e17] border border-white/10 rounded-xl p-4 space-y-3">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={gameIsUpcoming}
+                    onChange={(e) => setGameIsUpcoming(e.target.checked)}
+                    className="w-4 h-4 accent-[#00e5ff] rounded"
+                  />
+                  <span className="text-xs font-bold text-white">
+                    Ushbu o'yin hali chiqmagan (Kutilayotgan o'yinlar ro'yxatiga qo'shish)
+                  </span>
+                </label>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-300 block mb-1">
+                    O'yin Haqida Umumiy Ensiklopediya Maqolasi / Katta Sharh (Crafting bo'lmagan o'yinlar uchun ham)
+                  </label>
+                  <textarea
+                    rows={4}
+                    value={gameOverviewArticleUz}
+                    onChange={(e) => setGameOverviewArticleUz(e.target.value)}
+                    placeholder="O'yin syujeti, qahramonlari, yangiliklari va o'yin mexanikasi haqida batafsil ma'lumot..."
+                    className="w-full bg-[#0b1424] border border-white/10 rounded-lg p-3 text-xs text-white outline-none focus:border-[#00e5ff]"
                   />
                 </div>
               </div>
@@ -1247,13 +1314,42 @@ export const AdminPage: React.FC = () => {
                   />
                 </div>
 
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-bold text-slate-300 block mb-1">Chiqarilgan Yili</label>
+                    <input
+                      type="text"
+                      value={editingGame.releaseYear}
+                      onChange={(e) => setEditingGame({ ...editingGame, releaseYear: e.target.value })}
+                      className="w-full bg-[#070e17] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-amber-400 block mb-1">Aniq Reliz Sanasi</label>
+                    <input
+                      type="text"
+                      value={editingGame.releaseDateExact || ''}
+                      onChange={(e) => setEditingGame({ ...editingGame, releaseDateExact: e.target.value })}
+                      placeholder="Kuz 2025..."
+                      className="w-full bg-[#070e17] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-amber-400"
+                    />
+                  </div>
+                </div>
+
                 <div>
-                  <label className="text-xs font-bold text-slate-300 block mb-1">Chiqarilgan Yili</label>
-                  <input
-                    type="text"
-                    value={editingGame.releaseYear}
-                    onChange={(e) => setEditingGame({ ...editingGame, releaseYear: e.target.value })}
-                    className="w-full bg-[#070e17] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none"
+                  <label className="text-xs font-bold text-slate-300 block mb-1">
+                    Umumiy Ensiklopediya Sharhi / Katta Maqolasi
+                  </label>
+                  <textarea
+                    rows={4}
+                    value={editingGame.overviewArticle?.uz || editingGame.description?.uz || ''}
+                    onChange={(e) => setEditingGame({
+                      ...editingGame,
+                      overviewArticle: { uz: e.target.value, ru: e.target.value, en: e.target.value }
+                    })}
+                    placeholder="O'yin haqidagi batafsil sharh..."
+                    className="w-full bg-[#070e17] border border-white/10 rounded-xl p-3 text-xs text-white outline-none"
                   />
                 </div>
 
