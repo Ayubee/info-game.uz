@@ -40,7 +40,7 @@ export const Navbar: React.FC = () => {
     <header className="sticky top-0 z-50 bg-[#08101d]/90 backdrop-blur-md border-b border-white/10 shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
         
-        {/* Left: Brand Logo & Game Switcher */}
+        {/* Left: Brand Logo */}
         <div className="flex items-center gap-4 sm:gap-6">
           <Link to="/" className="flex items-center gap-2 group">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#0284c7] to-[#00e5ff] flex items-center justify-center text-[#070e17] shadow-lg shadow-[#00e5ff]/20 group-hover:scale-105 transition-transform">
@@ -50,45 +50,9 @@ export const Navbar: React.FC = () => {
               INFO-GAME<span className="text-[#00e5ff]">.UZ</span>
             </div>
           </Link>
-
-          {/* Multi-Game Dropdown Selector */}
-          <div className="relative">
-            <button
-              onClick={() => setGameDropdownOpen(!gameDropdownOpen)}
-              className="hidden sm:flex items-center gap-2 bg-[#0d182b] hover:bg-[#12223d] border border-[#00e5ff]/30 text-sky-200 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all"
-            >
-              <Gamepad2 className="w-3.5 h-3.5 text-[#00e5ff]" />
-              <span className="max-w-[130px] truncate">{activeGame?.name || "O'yin Tanlash"}</span>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-            </button>
-
-            {gameDropdownOpen && (
-              <div className="absolute top-full left-0 mt-2 w-56 bg-[#0c1626] border border-[#00e5ff]/30 rounded-xl shadow-2xl p-2 z-50 animate-in fade-in">
-                <div className="text-[10px] font-bold text-slate-400 px-2.5 py-1 uppercase tracking-wider">
-                  Mavjud O'yinlar ({games.length})
-                </div>
-                <div className="flex flex-col gap-1 mt-1 max-h-60 overflow-y-auto">
-                  {games.map((g) => (
-                    <button
-                      key={g.id}
-                      onClick={() => handleGameSelect(g.id)}
-                      className={`flex items-center justify-between text-left px-2.5 py-2 rounded-lg text-xs font-medium transition-colors ${
-                        g.id === activeGame?.id
-                          ? 'bg-[#00e5ff]/15 text-[#00e5ff] font-bold border border-[#00e5ff]/30'
-                          : 'text-slate-300 hover:bg-white/5'
-                      }`}
-                    >
-                      <span className="truncate">{g.name}</span>
-                      {g.id === 'raft' && <span className="text-[9px] bg-[#00e5ff]/20 text-[#00e5ff] px-1.5 py-0.5 rounded">Raft</span>}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
         </div>
 
-        {/* Center: Search Box (Desktop) */}
+        {/* Center: Search Box (Desktop) for News & Articles */}
         <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-md items-center">
           <div className="w-full relative">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -98,10 +62,10 @@ export const Navbar: React.FC = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={
                 language === 'uz'
-                  ? `${activeGame?.name || "O'yin"} buyumlari va retseptlarini qidiring...`
+                  ? "O'yin yangiliklari, maqola va sharhlarni qidiring..."
                   : language === 'ru'
-                  ? `Поиск предметов в ${activeGame?.name || "игре"}...`
-                  : `Search ${activeGame?.name || "game"} items, recipes...`
+                  ? "Поиск новостей, статей и обзоров игр..."
+                  : "Search gaming news, articles, and reviews..."
               }
               className="w-full bg-[#050a12] border border-white/10 focus:border-[#00e5ff]/60 rounded-xl pl-9 pr-12 py-1.5 text-xs text-slate-200 placeholder-slate-500 outline-none transition-all"
             />
@@ -121,16 +85,16 @@ export const Navbar: React.FC = () => {
               {language === 'uz' ? "Bosh Sahifa" : language === 'ru' ? "Главная" : "Home"}
             </Link>
             <Link
-              to={`/games/${activeGame?.id || 'raft'}`}
-              className={`hover:text-[#00e5ff] transition-colors ${location.pathname.startsWith('/games') ? 'text-[#00e5ff] font-bold' : ''}`}
-            >
-              {language === 'uz' ? "O'yinlar Wiki" : language === 'ru' ? "База Знаний" : "Games Wiki"}
-            </Link>
-            <Link
               to="/news"
               className={`hover:text-[#00e5ff] transition-colors ${location.pathname.startsWith('/news') ? 'text-[#00e5ff] font-bold' : ''}`}
             >
               {language === 'uz' ? "Yangiliklar" : language === 'ru' ? "Новости" : "News"}
+            </Link>
+            <Link
+              to="/games/raft"
+              className={`hover:text-[#00e5ff] transition-colors ${location.pathname.startsWith('/games') ? 'text-[#00e5ff] font-bold' : ''}`}
+            >
+              {language === 'uz' ? "Ensiklopediya" : language === 'ru' ? "Энциклопедия" : "Wiki"}
             </Link>
           </nav>
 
