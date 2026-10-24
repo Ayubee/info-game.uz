@@ -111,18 +111,13 @@ export const syncNewsFromFirestore = (onData: (news: NewsArticle[]) => void) => 
 
   const newsRef = collection(db, 'news');
   return onSnapshot(newsRef, (snapshot) => {
-    if (snapshot.empty) {
-      INITIAL_NEWS.forEach((n) => {
-        setDoc(doc(db, 'news', n.id), n).catch(console.error);
-      });
-      onData(INITIAL_NEWS);
-    } else {
-      const items: NewsArticle[] = [];
-      snapshot.forEach((docSnap) => {
-        items.push(docSnap.data() as NewsArticle);
-      });
-      onData(items);
-    }
+    const items: NewsArticle[] = [];
+    snapshot.forEach((docSnap) => {
+      items.push(docSnap.data() as NewsArticle);
+    });
+    // Sort news by date descending
+    items.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    onData(items);
   }, (err) => {
     console.error("Firestore News sync error:", err);
   });

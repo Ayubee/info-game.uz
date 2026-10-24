@@ -1,13 +1,19 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { Calendar, User, Eye, ArrowLeft, Share2, Sparkles } from 'lucide-react';
 
 export const NewsDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { news, t, language } = useApp();
+  const { news, t, language, incrementNewsViews } = useApp();
 
-  const article = news.find((n) => n.id === id || n.slug === id) || news[0];
+  const article = news.find((n) => n.id === id || n.slug === id);
+
+  useEffect(() => {
+    if (article) {
+      incrementNewsViews(article.id);
+    }
+  }, [article?.id]);
 
   if (!article) {
     return (

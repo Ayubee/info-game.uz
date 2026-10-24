@@ -43,6 +43,8 @@ interface AppContextType {
   isFirebaseConnected: boolean;
   setFirebaseConfig: (config: FirebaseConfig) => void;
 
+  incrementNewsViews: (newsId: string) => void;
+
   t: (loc: LocalizedString | string) => string;
 }
 
@@ -261,10 +263,39 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const deleteNews = (id: string) => {
-    setNews((prev) => prev.filter((n) => n.id !== id));
+    setNews((prev) => {
+      const filtered = prev.filter((n) => n.id !== id);
+      localStorage.setItem('info_game_news', JSON.stringify(filtered));
+      return filtered;
+    });
     if (isFirebaseActive()) {
       deleteNewsFromFirestore(id).catch(console.error);
     }
+  };
+
+  const incrementNewsViews = (newsId: string) => {
+    // Only increment once per session/browser to avoid artificial spam
+    const viewedKey = `viewed_news_${newsId}`;
+    if (sessionStorage.getItem(viewedKey)) {
+      return;
+    }
+    sessionStorage.setItem(viewedKey, '1');
+
+    setNews((prev) => {
+      const updated = prev.map((item) => {
+        if (item.id === newsId || item.slug === newsId) {
+          const currentViews = item.views || 0;
+          const articleUpdated = { ...item, views: currentViews + 1 };
+          if (isFirebaseActive()) {
+            saveNewsToFirestore(articleUpdated).catch(console.error);
+          }
+          return articleUpdated;
+        }
+        return item;
+      });
+      localStorage.setItem('info_game_news', JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const deleteWikiItem = (gameId: string, itemId: string) => {
@@ -430,6 +461,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         importGameFromSource,
         isFirebaseConnected,
         setFirebaseConfig,
+        incrementNewsViews,
         t,
       }}
     >
