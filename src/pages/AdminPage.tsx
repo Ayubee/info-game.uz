@@ -89,16 +89,27 @@ export const AdminPage: React.FC = () => {
   const [gameIsUpcoming, setGameIsUpcoming] = useState(false);
   const [gameOverviewArticleUz, setGameOverviewArticleUz] = useState('');
 
-  // Form State: Add News
+  // Form State: Add News (Multi-language and Tag management)
+  const [newsLangTab, setNewsLangTab] = useState<'uz' | 'ru' | 'en'>('uz');
   const [newsTitleUz, setNewsTitleUz] = useState('');
+  const [newsTitleRu, setNewsTitleRu] = useState('');
+  const [newsTitleEn, setNewsTitleEn] = useState('');
   const [newsSummaryUz, setNewsSummaryUz] = useState('');
+  const [newsSummaryRu, setNewsSummaryRu] = useState('');
+  const [newsSummaryEn, setNewsSummaryEn] = useState('');
   const [newsContentUz, setNewsContentUz] = useState('');
+  const [newsContentRu, setNewsContentRu] = useState('');
+  const [newsContentEn, setNewsContentEn] = useState('');
   const [newsCover, setNewsCover] = useState<string>('');
   const [newsVideoUrl, setNewsVideoUrl] = useState('');
-  const [newsGameId, setNewsGameId] = useState('raft');
-  const [newsTags, setNewsTags] = useState('Patch, Reliz, O\'yinlar');
+  const [newsGameId, setNewsGameId] = useState('all');
+  const [newsCustomGame, setNewsCustomGame] = useState('');
   const [newsAuthor, setNewsAuthor] = useState('Bosh Muharrir');
   const [newsExpectedReleaseDate, setNewsExpectedReleaseDate] = useState('');
+  
+  // Tag selection system
+  const [selectedTags, setSelectedTags] = useState<string[]>(['Yangilik', 'Reliz']);
+  const [customTagInput, setCustomTagInput] = useState('');
 
   // Form State: Add Wiki Item
   const [wikiGameId, setWikiGameId] = useState('raft');
@@ -170,27 +181,57 @@ export const AdminPage: React.FC = () => {
 
   const handleCreateNews = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newsTitleUz.trim()) return;
+    if (!newsTitleUz.trim() && !newsTitleRu.trim() && !newsTitleEn.trim()) {
+      alert("Kamida bitta tilda sarlavha kiritishingiz shart!");
+      return;
+    }
+
+    const defaultTitle = newsTitleUz || newsTitleRu || newsTitleEn;
+    const defaultSummary = newsSummaryUz || newsSummaryRu || newsSummaryEn;
+    const defaultContent = newsContentUz || newsContentRu || newsContentEn;
+
+    const finalGameId = newsGameId === 'custom' 
+      ? (newsCustomGame.trim() || 'all') 
+      : newsGameId;
 
     addNews({
-      title: { uz: newsTitleUz, ru: newsTitleUz, en: newsTitleUz },
-      summary: { uz: newsSummaryUz, ru: newsSummaryUz, en: newsSummaryUz },
-      content: { uz: newsContentUz, ru: newsContentUz, en: newsContentUz },
+      title: { 
+        uz: newsTitleUz.trim() || defaultTitle, 
+        ru: newsTitleRu.trim() || defaultTitle, 
+        en: newsTitleEn.trim() || defaultTitle 
+      },
+      summary: { 
+        uz: newsSummaryUz.trim() || defaultSummary, 
+        ru: newsSummaryRu.trim() || defaultSummary, 
+        en: newsSummaryEn.trim() || defaultSummary 
+      },
+      content: { 
+        uz: newsContentUz.trim() || defaultContent, 
+        ru: newsContentRu.trim() || defaultContent, 
+        en: newsContentEn.trim() || defaultContent 
+      },
       coverImage: newsCover || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80',
       videoUrl: newsVideoUrl.trim() || undefined,
-      gameId: newsGameId,
-      tags: newsTags.split(',').map((t) => t.trim()),
+      gameId: finalGameId,
+      tags: selectedTags.length > 0 ? selectedTags : ['Yangilik'],
       author: newsAuthor,
       expectedReleaseDate: newsExpectedReleaseDate.trim() || undefined,
     });
 
     setNewsTitleUz('');
+    setNewsTitleRu('');
+    setNewsTitleEn('');
     setNewsSummaryUz('');
+    setNewsSummaryRu('');
+    setNewsSummaryEn('');
     setNewsContentUz('');
+    setNewsContentRu('');
+    setNewsContentEn('');
     setNewsCover('');
     setNewsVideoUrl('');
     setNewsExpectedReleaseDate('');
-    showNotification("Yangilik muvaffaqiyatli chop etildi!");
+    setNewsCustomGame('');
+    showNotification("Yangilik barcha tillarda muvaffaqiyatli chop etildi!");
   };
 
   const handleCreateWikiItem = (e: React.FormEvent) => {
@@ -507,19 +548,32 @@ export const AdminPage: React.FC = () => {
                 <span>Yangi Post / Maqola Yaratish</span>
               </h2>
 
+              {/* Game Selector with Custom / General Option */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-bold text-slate-300 block mb-1">Bog'langan O'yin</label>
+                  <label className="text-xs font-bold text-slate-300 block mb-1">Qaysi o'yin bo'yicha yangilik? *</label>
                   <select
                     value={newsGameId}
                     onChange={(e) => setNewsGameId(e.target.value)}
                     className="w-full bg-[#070e17] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-[#00e5ff]"
                   >
-                    <option value="all">Barcha O'yinlar (Umumiy)</option>
+                    <option value="all">🌐 Barcha O'yinlar (Umumiy yangilik)</option>
                     {games.map((g) => (
-                      <option key={g.id} value={g.id}>{g.name}</option>
+                      <option key={g.id} value={g.id}>🎮 {g.name}</option>
                     ))}
+                    <option value="custom">➕ Ro'yxatda yo'q boshqa o'yin (Qo'lda yozish)</option>
                   </select>
+
+                  {newsGameId === 'custom' && (
+                    <input
+                      type="text"
+                      required
+                      value={newsCustomGame}
+                      onChange={(e) => setNewsCustomGame(e.target.value)}
+                      placeholder="O'yin nomini kiriting (masalan: GTA 6, Witcher 4...)"
+                      className="w-full mt-2 bg-[#050b14] border border-[#00e5ff]/50 rounded-xl px-3 py-2 text-xs text-white outline-none animate-in fade-in"
+                    />
+                  )}
                 </div>
 
                 <div>
@@ -530,6 +584,96 @@ export const AdminPage: React.FC = () => {
                     onChange={(e) => setNewsAuthor(e.target.value)}
                     className="w-full bg-[#070e17] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none"
                   />
+                </div>
+              </div>
+
+              {/* Tag System: Select existing or Add custom tags */}
+              <div className="bg-[#070e17] border border-white/10 rounded-2xl p-4 space-y-3">
+                <label className="text-xs font-bold text-[#00e5ff] flex items-center justify-between">
+                  <span>Teglar (Kategoriya / Mavzular) *</span>
+                  <span className="text-[10px] text-slate-400 font-normal">Tanlangan: {selectedTags.length} ta</span>
+                </label>
+
+                {/* Selected Tag Badges */}
+                <div className="flex flex-wrap gap-1.5 min-h-[32px] items-center">
+                  {selectedTags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="bg-[#00e5ff]/20 text-[#00e5ff] border border-[#00e5ff]/40 text-xs px-2.5 py-1 rounded-lg flex items-center gap-1.5 font-bold"
+                    >
+                      <span>#{tag}</span>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedTags(selectedTags.filter((t) => t !== tag))}
+                        className="hover:text-red-400"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </span>
+                  ))}
+                  {selectedTags.length === 0 && (
+                    <span className="text-xs text-slate-500 italic">Hali teg tanlanmadi. Quyidagilardan tanlang yoki yangi qo'shing.</span>
+                  )}
+                </div>
+
+                {/* Popular / Existing Tags */}
+                <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-white/5">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase mr-1">Tavsiya teglar:</span>
+                  {['Yangilik', 'Reliz', 'Patch', 'Treyler', 'GTA 6', 'CS2', 'Rust', 'E-Sport', 'Geympley', 'Mobil'].map((pt) => {
+                    const isSelected = selectedTags.includes(pt);
+                    return (
+                      <button
+                        key={pt}
+                        type="button"
+                        onClick={() => {
+                          if (isSelected) {
+                            setSelectedTags(selectedTags.filter((t) => t !== pt));
+                          } else {
+                            setSelectedTags([...selectedTags, pt]);
+                          }
+                        }}
+                        className={`text-[11px] px-2 py-0.5 rounded-md border transition-all ${
+                          isSelected
+                            ? 'bg-[#00e5ff] text-[#070e17] font-bold border-[#00e5ff]'
+                            : 'bg-white/5 text-slate-300 border-white/10 hover:border-white/30'
+                        }`}
+                      >
+                        + {pt}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Custom Tag Input */}
+                <div className="flex gap-2 pt-1">
+                  <input
+                    type="text"
+                    value={customTagInput}
+                    onChange={(e) => setCustomTagInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (customTagInput.trim() && !selectedTags.includes(customTagInput.trim())) {
+                          setSelectedTags([...selectedTags, customTagInput.trim()]);
+                          setCustomTagInput('');
+                        }
+                      }
+                    }}
+                    placeholder="Yangi teg yozib Enter bosing..."
+                    className="flex-1 bg-[#0b1424] border border-white/10 focus:border-[#00e5ff] rounded-xl px-3 py-1.5 text-xs text-white outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (customTagInput.trim() && !selectedTags.includes(customTagInput.trim())) {
+                        setSelectedTags([...selectedTags, customTagInput.trim()]);
+                        setCustomTagInput('');
+                      }
+                    }}
+                    className="bg-white/10 hover:bg-white/20 text-white text-xs px-3 py-1.5 rounded-xl font-bold transition-colors"
+                  >
+                    Qo'shish
+                  </button>
                 </div>
               </div>
 
@@ -618,41 +762,164 @@ export const AdminPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Title & Texts */}
-              <div className="space-y-3">
-                <div>
-                  <label className="text-xs font-bold text-slate-300 block mb-1">Sarlavha (Title) *</label>
-                  <input
-                    type="text"
-                    required
-                    value={newsTitleUz}
-                    onChange={(e) => setNewsTitleUz(e.target.value)}
-                    placeholder="Maqola sarlavhasi..."
-                    className="w-full bg-[#070e17] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-[#00e5ff]"
-                  />
+              {/* Multi-Language Title & Content Tabs */}
+              <div className="bg-[#070e17] border border-white/10 rounded-2xl p-5 space-y-4">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-white/10 pb-3">
+                  <div>
+                    <label className="text-xs font-bold text-white flex items-center gap-2">
+                      <Globe className="w-4 h-4 text-[#00e5ff]" />
+                      <span>Post Matnlari (O'zbek, Rus va Ingliz tillarida)</span>
+                    </label>
+                    <span className="text-[10px] text-slate-400">
+                      Istalgan tilda yozishingiz mumkin. Sayt foydalanuvchi tanlagan tilga mosini ko'rsatadi.
+                    </span>
+                  </div>
+
+                  {/* Language Switcher Buttons for Form */}
+                  <div className="flex bg-[#0b1424] p-1 rounded-xl border border-white/10 gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setNewsLangTab('uz')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                        newsLangTab === 'uz' ? 'bg-[#00e5ff] text-[#070e17]' : 'text-slate-300 hover:text-white'
+                      }`}
+                    >
+                      <span>🇺🇿</span>
+                      <span>O'zbekcha</span>
+                      {newsTitleUz && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setNewsLangTab('ru')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                        newsLangTab === 'ru' ? 'bg-[#00e5ff] text-[#070e17]' : 'text-slate-300 hover:text-white'
+                      }`}
+                    >
+                      <span>🇷🇺</span>
+                      <span>Русский</span>
+                      {newsTitleRu && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setNewsLangTab('en')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                        newsLangTab === 'en' ? 'bg-[#00e5ff] text-[#070e17]' : 'text-slate-300 hover:text-white'
+                      }`}
+                    >
+                      <span>🇬🇧</span>
+                      <span>English</span>
+                      {newsTitleEn && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />}
+                    </button>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="text-xs font-bold text-slate-300 block mb-1">Qisqacha Tavsif</label>
-                  <textarea
-                    rows={2}
-                    value={newsSummaryUz}
-                    onChange={(e) => setNewsSummaryUz(e.target.value)}
-                    placeholder="Qisqacha mazmun..."
-                    className="w-full bg-[#070e17] border border-white/10 rounded-xl p-3 text-xs text-white outline-none"
-                  />
-                </div>
+                {/* Uzbek Inputs */}
+                {newsLangTab === 'uz' && (
+                  <div className="space-y-3 animate-in fade-in">
+                    <div>
+                      <label className="text-xs font-bold text-slate-300 block mb-1">🇺🇿 Sarlavha (O'zbekcha) *</label>
+                      <input
+                        type="text"
+                        value={newsTitleUz}
+                        onChange={(e) => setNewsTitleUz(e.target.value)}
+                        placeholder="Grand Theft Auto VI: Chiqish sanasi va tafsilotlar..."
+                        className="w-full bg-[#0b1424] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-[#00e5ff]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-300 block mb-1">🇺🇿 Qisqacha Tavsif (O'zbekcha)</label>
+                      <textarea
+                        rows={2}
+                        value={newsSummaryUz}
+                        onChange={(e) => setNewsSummaryUz(e.target.value)}
+                        placeholder="O'yin haqida qisqacha ma'lumot..."
+                        className="w-full bg-[#0b1424] border border-white/10 rounded-xl p-3 text-xs text-white outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-300 block mb-1">🇺🇿 To'liq Matn (O'zbekcha)</label>
+                      <textarea
+                        rows={4}
+                        value={newsContentUz}
+                        onChange={(e) => setNewsContentUz(e.target.value)}
+                        placeholder="Maqolaning to'liq matni..."
+                        className="w-full bg-[#0b1424] border border-white/10 rounded-xl p-3 text-xs text-white outline-none"
+                      />
+                    </div>
+                  </div>
+                )}
 
-                <div>
-                  <label className="text-xs font-bold text-slate-300 block mb-1">Asosiy Matn (Content)</label>
-                  <textarea
-                    rows={4}
-                    value={newsContentUz}
-                    onChange={(e) => setNewsContentUz(e.target.value)}
-                    placeholder="To'liq matn..."
-                    className="w-full bg-[#070e17] border border-white/10 rounded-xl p-3 text-xs text-white outline-none"
-                  />
-                </div>
+                {/* Russian Inputs */}
+                {newsLangTab === 'ru' && (
+                  <div className="space-y-3 animate-in fade-in">
+                    <div>
+                      <label className="text-xs font-bold text-slate-300 block mb-1">🇷🇺 Заголовок (Русский)</label>
+                      <input
+                        type="text"
+                        value={newsTitleRu}
+                        onChange={(e) => setNewsTitleRu(e.target.value)}
+                        placeholder="Grand Theft Auto VI: Дата выхода и подробности..."
+                        className="w-full bg-[#0b1424] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-[#00e5ff]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-300 block mb-1">🇷🇺 Краткое описание (Русский)</label>
+                      <textarea
+                        rows={2}
+                        value={newsSummaryRu}
+                        onChange={(e) => setNewsSummaryRu(e.target.value)}
+                        placeholder="Краткое содержание..."
+                        className="w-full bg-[#0b1424] border border-white/10 rounded-xl p-3 text-xs text-white outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-300 block mb-1">🇷🇺 Полный текст (Русский)</label>
+                      <textarea
+                        rows={4}
+                        value={newsContentRu}
+                        onChange={(e) => setNewsContentRu(e.target.value)}
+                        placeholder="Полный текст новости..."
+                        className="w-full bg-[#0b1424] border border-white/10 rounded-xl p-3 text-xs text-white outline-none"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* English Inputs */}
+                {newsLangTab === 'en' && (
+                  <div className="space-y-3 animate-in fade-in">
+                    <div>
+                      <label className="text-xs font-bold text-slate-300 block mb-1">🇬🇧 Title (English)</label>
+                      <input
+                        type="text"
+                        value={newsTitleEn}
+                        onChange={(e) => setNewsTitleEn(e.target.value)}
+                        placeholder="Grand Theft Auto VI: Release Date and details..."
+                        className="w-full bg-[#0b1424] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-[#00e5ff]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-300 block mb-1">🇬🇧 Short Excerpt (English)</label>
+                      <textarea
+                        rows={2}
+                        value={newsSummaryEn}
+                        onChange={(e) => setNewsSummaryEn(e.target.value)}
+                        placeholder="Brief summary..."
+                        className="w-full bg-[#0b1424] border border-white/10 rounded-xl p-3 text-xs text-white outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-300 block mb-1">🇬🇧 Full Content (English)</label>
+                      <textarea
+                        rows={4}
+                        value={newsContentEn}
+                        onChange={(e) => setNewsContentEn(e.target.value)}
+                        placeholder="Full article body..."
+                        className="w-full bg-[#0b1424] border border-white/10 rounded-xl p-3 text-xs text-white outline-none"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               <button
@@ -908,18 +1175,47 @@ export const AdminPage: React.FC = () => {
               </div>
 
               <form onSubmit={handleSaveNewsEdit} className="space-y-4">
-                <div>
-                  <label className="text-xs font-bold text-slate-300 block mb-1">Sarlavha</label>
-                  <input
-                    type="text"
-                    required
-                    value={editingNews.title.uz}
-                    onChange={(e) => setEditingNews({
-                      ...editingNews,
-                      title: { ...editingNews.title, uz: e.target.value }
-                    })}
-                    className="w-full bg-[#070e17] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-[#00e5ff]"
-                  />
+                {/* Multi-language edit inputs */}
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-xs font-bold text-slate-300 block mb-1">🇺🇿 Sarlavha (O'zbekcha)</label>
+                    <input
+                      type="text"
+                      value={editingNews.title.uz}
+                      onChange={(e) => setEditingNews({
+                        ...editingNews,
+                        title: { ...editingNews.title, uz: e.target.value }
+                      })}
+                      className="w-full bg-[#070e17] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-[#00e5ff]"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-bold text-slate-300 block mb-1">🇷🇺 Заголовок (Русский)</label>
+                      <input
+                        type="text"
+                        value={editingNews.title.ru || ''}
+                        onChange={(e) => setEditingNews({
+                          ...editingNews,
+                          title: { ...editingNews.title, ru: e.target.value }
+                        })}
+                        className="w-full bg-[#070e17] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-300 block mb-1">🇬🇧 Title (English)</label>
+                      <input
+                        type="text"
+                        value={editingNews.title.en || ''}
+                        onChange={(e) => setEditingNews({
+                          ...editingNews,
+                          title: { ...editingNews.title, en: e.target.value }
+                        })}
+                        className="w-full bg-[#070e17] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <div className="space-y-2">
