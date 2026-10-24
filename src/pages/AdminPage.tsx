@@ -61,7 +61,7 @@ export const AdminPage: React.FC = () => {
     isFirebaseConnected, setFirebaseConfig
   } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'games' | 'news' | 'wiki' | 'import' | 'database'>('news');
+  const [activeTab, setActiveTab] = useState<'news' | 'wiki' | 'database'>('news');
   const [successMessage, setSuccessMessage] = useState<string>('');
   const [isImporting, setIsImporting] = useState<boolean>(false);
 
@@ -328,67 +328,43 @@ export const AdminPage: React.FC = () => {
           </div>
         )}
 
-        {/* Tab Switcher */}
+        {/* Tab Switcher: Only News, Game Wiki/Reviews, and Database Status */}
         <div className="flex flex-wrap gap-2 border-b border-white/10 pb-2">
           <button
-            onClick={() => setActiveTab('database')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
-              activeTab === 'database'
-                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg'
-                : 'bg-[#0b1424] text-amber-400 hover:bg-white/5 border border-amber-500/30'
-            }`}
-          >
-            <Flame className="w-4 h-4 text-amber-300" />
-            <span>🔥 Google Firebase Baza Ulanishi</span>
-            {isFirebaseConnected && <span className="text-[9px] bg-white/20 px-1.5 py-0.2 rounded font-mono">ULANDI</span>}
-          </button>
-
-          <button
             onClick={() => setActiveTab('news')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${
               activeTab === 'news'
                 ? 'bg-[#00e5ff] text-[#070e17] shadow-lg shadow-[#00e5ff]/20'
                 : 'bg-[#0b1424] text-slate-300 hover:bg-white/5 border border-white/10'
             }`}
           >
             <Newspaper className="w-4 h-4" />
-            <span>Postlar & Yangiliklar ({news.length})</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('games')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
-              activeTab === 'games'
-                ? 'bg-[#00e5ff] text-[#070e17] shadow-lg shadow-[#00e5ff]/20'
-                : 'bg-[#0b1424] text-slate-300 hover:bg-white/5 border border-white/10'
-            }`}
-          >
-            <Gamepad2 className="w-4 h-4" />
-            <span>O'yinlar ({games.length})</span>
+            <span>📰 Yangiliklar & Postlar ({news.length})</span>
           </button>
 
           <button
             onClick={() => setActiveTab('wiki')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${
               activeTab === 'wiki'
                 ? 'bg-[#00e5ff] text-[#070e17] shadow-lg shadow-[#00e5ff]/20'
                 : 'bg-[#0b1424] text-slate-300 hover:bg-white/5 border border-white/10'
             }`}
           >
-            <Database className="w-4 h-4" />
-            <span>Wiki Buyumlar & Retseptlar</span>
+            <Gamepad2 className="w-4 h-4" />
+            <span>🎮 O'yinlar Ensiklopediyasi & Sharhlari ({games.length})</span>
           </button>
 
           <button
-            onClick={() => setActiveTab('import')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
-              activeTab === 'import'
-                ? 'bg-[#00e5ff] text-[#070e17] shadow-lg shadow-[#00e5ff]/20'
-                : 'bg-[#0b1424] text-[#00e5ff] hover:bg-white/5 border border-[#00e5ff]/30'
+            onClick={() => setActiveTab('database')}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ml-auto ${
+              activeTab === 'database'
+                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg'
+                : 'bg-[#0b1424] text-amber-400 hover:bg-white/5 border border-amber-500/30'
             }`}
           >
-            <DownloadCloud className="w-4 h-4" />
-            <span>⚡ Istochnikdan Yuklash</span>
+            <Flame className="w-4 h-4 text-amber-300" />
+            <span>🔥 Google Firebase Baza Holati</span>
+            {isFirebaseConnected && <span className="text-[9px] bg-white/20 px-1.5 py-0.2 rounded font-mono">ULANDI</span>}
           </button>
         </div>
 
@@ -744,14 +720,14 @@ export const AdminPage: React.FC = () => {
         )}
 
         {/* ========================================================= */}
-        {/* TAB 2: GAMES (With Local File Upload, Edit, Delete)       */}
+        {/* TAB 2: WIKI & GAMES (Add, List, Edit, Delete Games/Wiki)  */}
         {/* ========================================================= */}
-        {activeTab === 'games' && (
+        {activeTab === 'wiki' && (
           <div className="space-y-8">
             <form onSubmit={handleCreateGame} className="bg-[#0b1424] border border-white/10 rounded-2xl p-6 space-y-6">
               <h2 className="text-lg font-bold text-white flex items-center gap-2">
                 <PlusCircle className="w-5 h-5 text-[#00e5ff]" />
-                <span>Yangi O'yin Qo'shish</span>
+                <span>Yangi O'yin / Ensiklopediya Sharhi Qo'shish</span>
               </h2>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -762,40 +738,29 @@ export const AdminPage: React.FC = () => {
                     required
                     value={gameName}
                     onChange={(e) => setGameName(e.target.value)}
-                    placeholder="Masalan: Raft, Rust, CS2..."
+                    placeholder="Masalan: GTA 6, Counter-Strike 2, STALKER 2..."
                     className="w-full bg-[#070e17] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-[#00e5ff]"
                   />
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-slate-300 block mb-1">Chiqarilgan Yili / Kutilayotgan Vaqt</label>
-                  <input
-                    type="text"
-                    value={gameYear}
-                    onChange={(e) => setGameYear(e.target.value)}
-                    placeholder="2025 yoki Kuz 2025"
-                    className="w-full bg-[#070e17] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-amber-400 block mb-1">Aniq Reliz Sanasi (Ixtiyoriy)</label>
+                  <label className="text-xs font-bold text-amber-400 block mb-1">Kutilayotgan Reliz Sanasi</label>
                   <input
                     type="text"
                     value={gameReleaseDateExact}
                     onChange={(e) => setGameReleaseDateExact(e.target.value)}
-                    placeholder="Kuz 2025, 17-Sentyabr 2025..."
+                    placeholder="Kuz 2025, 2026-yil..."
                     className="w-full bg-[#070e17] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-amber-400"
                   />
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-slate-300 block mb-1">Ishlab chiqaruvchi</label>
+                  <label className="text-xs font-bold text-slate-300 block mb-1">Ishlab chiqaruvchi (Developer)</label>
                   <input
                     type="text"
                     value={gameDeveloper}
                     onChange={(e) => setGameDeveloper(e.target.value)}
-                    placeholder="Rockstar Games, Valve..."
+                    placeholder="Rockstar Games, Valve, GSC..."
                     className="w-full bg-[#070e17] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none"
                   />
                 </div>
@@ -806,44 +771,31 @@ export const AdminPage: React.FC = () => {
                     type="text"
                     value={gameGenres}
                     onChange={(e) => setGameGenres(e.target.value)}
+                    placeholder="Action, Open World, Shooter..."
                     className="w-full bg-[#070e17] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none"
                   />
                 </div>
               </div>
 
-              {/* Upcoming checkbox & Large Overview Article */}
-              <div className="bg-[#070e17] border border-white/10 rounded-xl p-4 space-y-3">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={gameIsUpcoming}
-                    onChange={(e) => setGameIsUpcoming(e.target.checked)}
-                    className="w-4 h-4 accent-[#00e5ff] rounded"
-                  />
-                  <span className="text-xs font-bold text-white">
-                    Ushbu o'yin hali chiqmagan (Kutilayotgan o'yinlar ro'yxatiga qo'shish)
-                  </span>
+              {/* Overview / Story / Review Content */}
+              <div>
+                <label className="text-xs font-bold text-slate-300 block mb-1">
+                  O'yin Haqida Katta Ensiklopediya Sharhi (Syujet, Personajlar, O'yin mexanikasi)
                 </label>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-300 block mb-1">
-                    O'yin Haqida Umumiy Ensiklopediya Maqolasi / Katta Sharh (Crafting bo'lmagan o'yinlar uchun ham)
-                  </label>
-                  <textarea
-                    rows={4}
-                    value={gameOverviewArticleUz}
-                    onChange={(e) => setGameOverviewArticleUz(e.target.value)}
-                    placeholder="O'yin syujeti, qahramonlari, yangiliklari va o'yin mexanikasi haqida batafsil ma'lumot..."
-                    className="w-full bg-[#0b1424] border border-white/10 rounded-lg p-3 text-xs text-white outline-none focus:border-[#00e5ff]"
-                  />
-                </div>
+                <textarea
+                  rows={5}
+                  value={gameOverviewArticleUz}
+                  onChange={(e) => setGameOverviewArticleUz(e.target.value)}
+                  placeholder="Ushbu o'yin haqida batafsil ma'lumotlar, yangiliklar va sharh..."
+                  className="w-full bg-[#070e17] border border-white/10 rounded-xl p-3 text-xs text-white outline-none focus:border-[#00e5ff]"
+                />
               </div>
 
               {/* Local File Upload for Game Cover */}
               <div className="space-y-2">
                 <label className="text-xs font-bold text-[#00e5ff] flex items-center gap-1.5">
                   <Upload className="w-4 h-4" />
-                  <span>O'yin Muqova Rasmi (Kompyuteringizdan Yuklang)</span>
+                  <span>O'yin Rasmi (Kompyuteringizdan Yuklang)</span>
                 </label>
                 <input
                   type="file"
@@ -869,18 +821,17 @@ export const AdminPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Source URL with auto-import hint */}
-              <div className="bg-[#070e17] border border-[#00e5ff]/20 p-4 rounded-xl space-y-2">
-                <label className="text-xs font-bold text-[#00e5ff] flex items-center gap-1.5">
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  <span>Istochnik / Manba Sayt Ssilkasi (Ixtiyoriy)</span>
+              {/* Source URL (Optional) */}
+              <div>
+                <label className="text-xs font-bold text-slate-300 block mb-1">
+                  Manba Sayt Ssilkasi (Ixtiyoriy)
                 </label>
                 <input
                   type="url"
                   value={gameSourceUrl}
                   onChange={(e) => setGameSourceUrl(e.target.value)}
-                  placeholder="https://raft.fandom.com (agar yo'q bo'lsa bo'sh qoldiring)"
-                  className="w-full bg-[#0b1424] border border-white/10 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-[#00e5ff]"
+                  placeholder="https://..."
+                  className="w-full bg-[#070e17] border border-white/10 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-[#00e5ff]"
                 />
               </div>
 
@@ -888,14 +839,14 @@ export const AdminPage: React.FC = () => {
                 type="submit"
                 className="bg-[#00e5ff] text-[#070e17] font-black text-xs px-6 py-2.5 rounded-xl hover:bg-[#38bdf8] transition-colors"
               >
-                O'yinni Saqlash
+                O'yin Sharhini Saqlash
               </button>
             </form>
 
             {/* List of Existing Games */}
             <div className="bg-[#0b1424] border border-white/10 rounded-2xl p-6 space-y-4">
               <h3 className="text-base font-bold text-white flex items-center justify-between">
-                <span>Mavjud O'yinlar ({games.length})</span>
+                <span>Mavjud O'yinlar Ensiklopediyasi ({games.length})</span>
                 <span className="text-xs text-slate-400 font-normal">Tahrirlash yoki o'chirish</span>
               </h3>
 
@@ -909,8 +860,8 @@ export const AdminPage: React.FC = () => {
                       <img src={game.coverImage} alt="" className="w-16 h-16 rounded-xl object-cover flex-shrink-0" />
                       <div>
                         <h4 className="text-sm font-bold text-white">{game.name}</h4>
-                        <div className="text-[10px] text-slate-400">{game.releaseYear} • {game.developer}</div>
-                        <div className="text-[10px] text-[#00e5ff] mt-0.5">{game.items?.length || 0} ta maqola</div>
+                        <div className="text-[10px] text-slate-400">{game.releaseDateExact || game.releaseYear} • {game.developer}</div>
+                        <div className="text-[10px] text-[#00e5ff] mt-0.5">Ensiklopediya sharhi mavjud</div>
                       </div>
                     </div>
 
@@ -940,246 +891,6 @@ export const AdminPage: React.FC = () => {
                 ))}
               </div>
             </div>
-          </div>
-        )}
-
-        {/* ========================================================= */}
-        {/* TAB 3: WIKI (Add, List, Edit, Delete)                     */}
-        {/* ========================================================= */}
-        {activeTab === 'wiki' && (
-          <div className="space-y-8">
-            <form onSubmit={handleCreateWikiItem} className="bg-[#0b1424] border border-white/10 rounded-2xl p-6 space-y-6">
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                <PlusCircle className="w-5 h-5 text-[#00e5ff]" />
-                <span>Yangi Wiki Buyum / Retsept Qo'shish</span>
-              </h2>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="text-xs font-bold text-slate-300 block mb-1">O'yinni Tanlang</label>
-                  <select
-                    value={wikiGameId}
-                    onChange={(e) => setWikiGameId(e.target.value)}
-                    className="w-full bg-[#070e17] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none"
-                  >
-                    {games.map((g) => (
-                      <option key={g.id} value={g.id}>{g.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-300 block mb-1">Kategoriya</label>
-                  <select
-                    value={wikiCategory}
-                    onChange={(e) => setWikiCategory(e.target.value)}
-                    className="w-full bg-[#070e17] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none"
-                  >
-                    <option value="resources">Resurslar / Minerallar</option>
-                    <option value="crafting">Asboblar & Qurollar</option>
-                    <option value="food">Oshpazlik & Taomlar</option>
-                    <option value="locations">Orollar / Xaritalar</option>
-                    <option value="machinery">Mexanizmlar</option>
-                    <option value="creatures">Dushmanlar & Jonivorlar</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-300 block mb-1">Ikonka (Emoji)</label>
-                  <input
-                    type="text"
-                    value={wikiIcon}
-                    onChange={(e) => setWikiIcon(e.target.value)}
-                    className="w-full bg-[#070e17] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none text-center"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs font-bold text-slate-300 block mb-1">Buyum Nomi *</label>
-                  <input
-                    type="text"
-                    required
-                    value={wikiNameUz}
-                    onChange={(e) => setWikiNameUz(e.target.value)}
-                    placeholder="Temir Nayza, Titan Quymasi..."
-                    className="w-full bg-[#070e17] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-300 block mb-1">Tier / Daraja</label>
-                  <input
-                    type="text"
-                    value={wikiTier}
-                    onChange={(e) => setWikiTier(e.target.value)}
-                    placeholder="Tier 1, S-Rank, Epic..."
-                    className="w-full bg-[#070e17] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-300 block mb-1">Tavsif</label>
-                <textarea
-                  rows={2}
-                  value={wikiDescUz}
-                  onChange={(e) => setWikiDescUz(e.target.value)}
-                  className="w-full bg-[#070e17] border border-white/10 rounded-xl p-3 text-xs text-white outline-none"
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="bg-[#00e5ff] text-[#070e17] font-black text-xs px-6 py-2.5 rounded-xl hover:bg-[#38bdf8] transition-colors"
-              >
-                Wiki Buyumini Saqlash
-              </button>
-            </form>
-
-            {/* List and Edit Existing Wiki Items by Game */}
-            <div className="bg-[#0b1424] border border-white/10 rounded-2xl p-6 space-y-4">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <h3 className="text-base font-bold text-white">Mavjud Wiki Maqolalar & Retseptlar</h3>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-slate-400">Ko'rish uchun o'yin:</span>
-                  <select
-                    value={wikiGameId}
-                    onChange={(e) => setWikiGameId(e.target.value)}
-                    className="bg-[#070e17] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white outline-none"
-                  >
-                    {games.map((g) => (
-                      <option key={g.id} value={g.id}>{g.name}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="divide-y divide-white/5 bg-[#070e17] border border-white/10 rounded-xl overflow-hidden">
-                {games.find((g) => g.id === wikiGameId)?.items?.length === 0 ? (
-                  <div className="p-8 text-center text-xs text-slate-500">
-                    Ushbu o'yinda hozircha wiki maqolalar mavjud emas.
-                  </div>
-                ) : (
-                  games.find((g) => g.id === wikiGameId)?.items?.map((item) => (
-                    <div key={item.id} className="p-3.5 flex items-center justify-between gap-4 hover:bg-white/5 transition-colors">
-                      <div className="flex items-center gap-3">
-                        <span className="text-2xl">{item.icon}</span>
-                        <div>
-                          <div className="text-xs font-bold text-white">{t(item.name)}</div>
-                          <div className="text-[10px] text-slate-400">
-                            {item.category} • {item.tier || 'Oddiy'}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => setEditingWikiItem({ gameId: wikiGameId, item })}
-                          className="bg-[#00e5ff]/10 hover:bg-[#00e5ff]/20 text-[#00e5ff] text-xs px-2.5 py-1 rounded-lg flex items-center gap-1 font-bold"
-                        >
-                          <Edit3 className="w-3.5 h-3.5" />
-                          <span>O'zgartirish</span>
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            if (confirm(`"${t(item.name)}" buyumini o'chirishga ishonchingiz komilmi?`)) {
-                              deleteWikiItem(wikiGameId, item.id);
-                              showNotification("Buyum o'chirildi.");
-                            }
-                          }}
-                          className="bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs px-2.5 py-1 rounded-lg flex items-center gap-1 font-bold"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                          <span>O'chirish</span>
-                        </button>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ========================================================= */}
-        {/* TAB 4: AUTO-IMPORTER                                     */}
-        {/* ========================================================= */}
-        {activeTab === 'import' && (
-          <div className="bg-[#0b1424] border border-[#00e5ff]/40 rounded-2xl p-6 space-y-6">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-[#00e5ff]" />
-              <span>Istochnik (Manba) Ssilkasidan Ma'lumotlarni Avtomatik Yuklash</span>
-            </h2>
-
-            <form onSubmit={handleAutoImport} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="sm:col-span-2">
-                  <label className="text-xs font-bold text-[#00e5ff] block mb-1">
-                    Istochnik Sayt Ssilkasi (Fandom Wiki URL) *
-                  </label>
-                  <input
-                    type="url"
-                    required
-                    value={importUrl}
-                    onChange={(e) => setImportUrl(e.target.value)}
-                    placeholder="https://raft.fandom.com yoki https://rust.fandom.com"
-                    className="w-full bg-[#070e17] border border-[#00e5ff]/30 focus:border-[#00e5ff] rounded-xl px-4 py-3 text-xs text-white outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-300 block mb-1">
-                    O'yin Nomi (Ixtiyoriy)
-                  </label>
-                  <input
-                    type="text"
-                    value={importGameTitle}
-                    onChange={(e) => setImportGameTitle(e.target.value)}
-                    placeholder="Avtomatik aniqlanadi..."
-                    className="w-full bg-[#070e17] border border-white/10 focus:border-[#00e5ff] rounded-xl px-4 py-3 text-xs text-white outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400">
-                <span>Tezkor namunalar:</span>
-                <button
-                  type="button"
-                  onClick={() => setImportUrl('https://raft.fandom.com')}
-                  className="bg-white/5 hover:bg-white/10 text-[#00e5ff] px-2.5 py-1 rounded-lg border border-white/10"
-                >
-                  🌊 Raft Fandom Wiki
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setImportUrl('https://rust.fandom.com')}
-                  className="bg-white/5 hover:bg-white/10 text-amber-400 px-2.5 py-1 rounded-lg border border-white/10"
-                >
-                  🏹 Rust Fandom Wiki
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setImportUrl('https://theforest.fandom.com')}
-                  className="bg-white/5 hover:bg-white/10 text-emerald-400 px-2.5 py-1 rounded-lg border border-white/10"
-                >
-                  🌲 The Forest Fandom Wiki
-                </button>
-              </div>
-
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  disabled={isImporting}
-                  className="bg-[#00e5ff] hover:bg-[#38bdf8] text-[#070e17] font-black text-xs px-6 py-3 rounded-xl transition-all shadow-lg shadow-[#00e5ff]/20 flex items-center gap-2"
-                >
-                  {isImporting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <DownloadCloud className="w-4 h-4" />}
-                  <span>{isImporting ? "Yuklanmoqda..." : "Ushbu Manbadan Saytga Ma'lumotlarni Qo'shish"}</span>
-                </button>
-              </div>
-            </form>
           </div>
         )}
 
