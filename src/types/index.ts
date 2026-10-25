@@ -9,11 +9,15 @@ export interface LocalizedString {
 export interface WikiItem {
   id: string;
   name: LocalizedString;
-  category: string; // e.g. "resources", "crafting", "locations", "creatures", "weapons", "maps"
+  category: string; // e.g. "arc", "weapons", "maps", "resources", "crafting"
+  subCategory?: string; // e.g. "Security", "Husks and Probes", "Tier 1"
   tier?: string;
   description: LocalizedString;
   rarity?: 'common' | 'rare' | 'epic' | 'legendary';
   icon: string;
+  image?: string; // Full image / photo URL for enemy/weapon/item
+  drops?: string[]; // Notable drops / Loot: e.g. ["ARC Synthetic Resin", "ARC Thermo Lining", "Sensors"]
+  xpGained?: string; // e.g. "Destroy: +100 | Loot: +200"
   attributes?: Record<string, string | number>;
   recipe?: {
     ingredients: Array<{ item: string; count: number }>;
@@ -27,6 +31,7 @@ export interface WikiItem {
 export interface WikiCategory {
   id: string;
   name: LocalizedString;
+  description?: LocalizedString;
   icon: string;
   count?: number;
 }

@@ -64,11 +64,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const saved = localStorage.getItem('info_game_games');
     if (!saved) return INITIAL_GAMES;
     try {
-      const parsed = JSON.parse(saved);
+      const parsed: Game[] = JSON.parse(saved);
+      INITIAL_GAMES.forEach((initGame) => {
+        const found = parsed.find(g => g.id === initGame.id);
+        if (!found) {
+          parsed.push(initGame);
+        } else if (initGame.id === 'arc-raiders' && (!found.items || found.items.length === 0)) {
+          found.categories = initGame.categories;
+          found.items = initGame.items;
+          found.hasCrafting = true;
+        }
+      });
       return parsed.map((g: Game) => {
         if (g.hasCrafting === undefined) {
           if (g.id === 'cs2') return { ...g, hasCrafting: false };
-          return { ...g, hasCrafting: (g.items && g.items.some(i => !!i.recipe)) || g.id === 'raft' || g.id === 'rust' || g.id === 'minecraft' };
+          return { ...g, hasCrafting: true };
         }
         return g;
       });

@@ -92,16 +92,21 @@ export const AdminPage: React.FC = () => {
   const [editingCategory, setEditingCategory] = useState<WikiCategory | null>(null);
 
   // Form State: Fandom Wiki Item & Recipe Management
+  const itemFileInputRef = useRef<HTMLInputElement>(null);
   const [itemCatId, setItemCatId] = useState('');
+  const [itemSubCategory, setItemSubCategory] = useState('');
   const [itemNameUz, setItemNameUz] = useState('');
   const [itemNameRu, setItemNameRu] = useState('');
   const [itemNameEn, setItemNameEn] = useState('');
   const [itemIcon, setItemIcon] = useState('🔨');
+  const [itemImage, setItemImage] = useState('');
   const [itemTier, setItemTier] = useState('Tier 1');
   const [itemRarity, setItemRarity] = useState<'common' | 'rare' | 'epic' | 'legendary'>('common');
   const [itemDescUz, setItemDescUz] = useState('');
   const [itemDescRu, setItemDescRu] = useState('');
   const [itemDescEn, setItemDescEn] = useState('');
+  const [itemDrops, setItemDrops] = useState('');
+  const [itemXpGained, setItemXpGained] = useState('');
   const [itemStation, setItemStation] = useState('Dastgoh (Work Bench)');
   const [itemCraftTime, setItemCraftTime] = useState('Tezkor');
   const [itemLocation, setItemLocation] = useState('');
@@ -273,6 +278,11 @@ export const AdminPage: React.FC = () => {
     const targetGame = games.find(g => g.id === gameId);
     const categoryToUse = itemCatId || (targetGame?.categories?.[0]?.id || 'general');
 
+    const parsedDrops = itemDrops
+      .split(',')
+      .map(d => d.trim())
+      .filter(Boolean);
+
     const newItem: WikiItem = {
       id: `item-${Date.now()}`,
       name: {
@@ -281,9 +291,13 @@ export const AdminPage: React.FC = () => {
         en: itemNameEn.trim() || defaultName,
       },
       category: categoryToUse,
+      subCategory: itemSubCategory.trim() || undefined,
       tier: itemTier.trim() || undefined,
       rarity: itemRarity,
       icon: itemIcon.trim() || '📦',
+      image: itemImage.trim() || undefined,
+      drops: parsedDrops.length > 0 ? parsedDrops : undefined,
+      xpGained: itemXpGained.trim() || undefined,
       description: {
         uz: itemDescUz.trim() || defaultDesc,
         ru: itemDescRu.trim() || defaultDesc,
@@ -312,6 +326,10 @@ export const AdminPage: React.FC = () => {
     setItemDescEn('');
     setItemLocation('');
     setItemTipsUz('');
+    setItemImage('');
+    setItemSubCategory('');
+    setItemDrops('');
+    setItemXpGained('');
     setItemIngredients([{ item: 'Taxta (Plank)', count: 2 }]);
     setItemAttributes([{ key: 'Chidamlilik', value: '100' }]);
     showNotification("Fandom Wiki buyumi va retsepti saqlandi!");
@@ -2154,8 +2172,8 @@ export const AdminPage: React.FC = () => {
                     <span>Yangi Buyum / Craft Retsepti Kiritish (Raft Fandom uslubida)</span>
                   </h4>
 
-                  {/* Category, Tier, Rarity, Icon */}
-                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                  {/* Category, Subcategory, Tier, Rarity, Icon */}
+                  <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
                     <div>
                       <label className="text-xs font-bold text-slate-300 block mb-1">Kategoriya *</label>
                       <select
@@ -2174,10 +2192,21 @@ export const AdminPage: React.FC = () => {
                     </div>
 
                     <div>
+                      <label className="text-xs font-bold text-slate-300 block mb-1">Bo'lim / Subkategoriya</label>
+                      <input
+                        type="text"
+                        placeholder="Security, Husks, Qurollar..."
+                        value={itemSubCategory}
+                        onChange={(e) => setItemSubCategory(e.target.value)}
+                        className="w-full bg-[#0b1424] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none"
+                      />
+                    </div>
+
+                    <div>
                       <label className="text-xs font-bold text-slate-300 block mb-1">Tier / Daraja</label>
                       <input
                         type="text"
-                        placeholder="Tier 1, Tier 2, Early Game..."
+                        placeholder="Scout, Tier 1, Heavy..."
                         value={itemTier}
                         onChange={(e) => setItemTier(e.target.value)}
                         className="w-full bg-[#0b1424] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none"
@@ -2199,15 +2228,66 @@ export const AdminPage: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="text-xs font-bold text-slate-300 block mb-1">Ikonka (Emoji / Rasm)</label>
+                      <label className="text-xs font-bold text-slate-300 block mb-1">Ikonka (Emoji)</label>
                       <input
                         type="text"
-                        placeholder="Masalan: 🪓, 🎣, ⚙️, 🥩"
+                        placeholder="🤖, 👁️, 🪓, 🎣..."
                         value={itemIcon}
                         onChange={(e) => setItemIcon(e.target.value)}
                         className="w-full bg-[#0b1424] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none text-center"
                       />
                     </div>
+                  </div>
+
+                  {/* Image / Photo upload or URL */}
+                  <div className="bg-[#0b1424] border border-white/10 rounded-xl p-3.5 space-y-2">
+                    <label className="text-xs font-bold text-purple-300 flex items-center justify-between">
+                      <span className="flex items-center gap-1.5">
+                        <Upload className="w-4 h-4" />
+                        <span>Buyum / Robot / Xarita Rasmi (Foto)</span>
+                      </span>
+                      {itemImage && (
+                        <button
+                          type="button"
+                          onClick={() => setItemImage('')}
+                          className="text-[10px] text-red-400 hover:underline"
+                        >
+                          Rasmni o'chirish
+                        </button>
+                      )}
+                    </label>
+
+                    <div className="flex gap-2">
+                      <input
+                        type="url"
+                        placeholder="Rasm ssilkasi (https://...) yoki kompyuterdan yuklang"
+                        value={itemImage}
+                        onChange={(e) => setItemImage(e.target.value)}
+                        className="flex-1 bg-[#070e17] border border-white/10 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-purple-400"
+                      />
+                      <input
+                        type="file"
+                        ref={itemFileInputRef}
+                        accept="image/*"
+                        onChange={(e) => handleFileUpload(e, setItemImage)}
+                        className="hidden"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => itemFileInputRef.current?.click()}
+                        className="bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 text-xs px-3 py-2 rounded-lg font-bold flex items-center gap-1.5 flex-shrink-0"
+                      >
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>Fayl yuklash</span>
+                      </button>
+                    </div>
+
+                    {itemImage && (
+                      <div className="flex items-center gap-3 pt-1">
+                        <img src={itemImage} alt="Preview" className="h-16 w-28 object-cover rounded-lg border border-white/20" />
+                        <span className="text-[11px] text-emerald-400 font-semibold">Rasm tanlandi! Jadvalda fotolari bilan chiroyli chiqadi.</span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Multi-language Item Name */}
@@ -2404,6 +2484,34 @@ export const AdminPage: React.FC = () => {
                           </button>
                         </div>
                       ))}
+                    </div>
+                  </div>
+
+                  {/* Fandom Drops & XP Gained */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-[#0b1424] border border-white/10 rounded-xl p-3.5">
+                    <div>
+                      <label className="text-xs font-bold text-slate-300 block mb-1">
+                        🎁 O'ljalar / Droplar (Notable drops, vergul bilan)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="ARC Synthetic Resin, Sensors, Snitch Scanner..."
+                        value={itemDrops}
+                        onChange={(e) => setItemDrops(e.target.value)}
+                        className="w-full bg-[#070e17] border border-white/10 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-purple-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-300 block mb-1">
+                        ⭐ XP / Mukofot (XP Gained)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Destroy: +100 | Loot: +200..."
+                        value={itemXpGained}
+                        onChange={(e) => setItemXpGained(e.target.value)}
+                        className="w-full bg-[#070e17] border border-white/10 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-purple-400"
+                      />
                     </div>
                   </div>
 
