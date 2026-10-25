@@ -210,9 +210,11 @@ export const AdminPage: React.FC = () => {
     e.preventDefault();
     if (!editingNews) return;
 
+    const trimmedVideo = editingNews.videoUrl ? editingNews.videoUrl.trim() : '';
+
     updateNews(editingNews.id, {
       ...editingNews,
-      videoUrl: editingNews.videoUrl ? formatEmbedUrl(editingNews.videoUrl) : undefined,
+      videoUrl: trimmedVideo,
     });
     setEditingNews(null);
     showNotification("Maqola muvaffaqiyatli tahrirlandi!");
@@ -980,14 +982,48 @@ export const AdminPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-slate-300 block mb-1">Video Ssilka (YouTube)</label>
-                  <input
-                    type="url"
-                    value={editingNews.videoUrl || ''}
-                    onChange={(e) => setEditingNews({ ...editingNews, videoUrl: e.target.value })}
-                    placeholder="https://www.youtube.com/watch?v=... yoki https://youtu.be/..."
-                    className="w-full bg-[#070e17] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none"
-                  />
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-bold text-slate-300">Video Ssilka (YouTube)</label>
+                    {editingNews.videoUrl && (
+                      <button
+                        type="button"
+                        onClick={() => setEditingNews({ ...editingNews, videoUrl: '' })}
+                        className="text-[11px] text-red-400 hover:text-red-300 font-bold flex items-center gap-1 hover:underline"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Videoni olib tashlash</span>
+                      </button>
+                    )}
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="url"
+                      value={editingNews.videoUrl || ''}
+                      onChange={(e) => setEditingNews({ ...editingNews, videoUrl: e.target.value })}
+                      placeholder="https://www.youtube.com/watch?v=... yoki https://youtu.be/..."
+                      className="w-full bg-[#070e17] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none pr-8 focus:border-[#00e5ff]"
+                    />
+                    {editingNews.videoUrl && (
+                      <button
+                        type="button"
+                        onClick={() => setEditingNews({ ...editingNews, videoUrl: '' })}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                        title="Tozalash"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                  {editingNews.videoUrl ? (
+                    <p className="text-[10px] text-emerald-400 mt-1 flex items-center gap-1">
+                      <Video className="w-3 h-3" />
+                      <span>Ushbu maqolada video mavjud. Agar olib tashlamoqchi bo'lsangiz, qizil "Videoni olib tashlash" tugmasini bosing yoki maydonni tozalang.</span>
+                    </p>
+                  ) : (
+                    <p className="text-[10px] text-slate-500 mt-1">
+                      Video kiritilmasa yoki o'chirilsa, maqolada faqat asosiy muqova rasmi ko'rsatiladi.
+                    </p>
+                  )}
                 </div>
 
                 <div>

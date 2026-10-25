@@ -199,7 +199,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       summary: newArticle.summary || { uz: '', ru: '', en: '' },
       content: newArticle.content || { uz: '', ru: '', en: '' },
       coverImage: newArticle.coverImage || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80',
-      videoUrl: formatEmbedUrl(newArticle.videoUrl || ''),
+      videoUrl: newArticle.videoUrl && newArticle.videoUrl.trim() ? formatEmbedUrl(newArticle.videoUrl.trim()) : undefined,
       gameId: newArticle.gameId || 'all',
       tags: newArticle.tags || ['O\'yinlar'],
       author: newArticle.author || 'Admin',
@@ -210,7 +210,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       sourceName: newArticle.sourceName || '',
     };
 
-    setNews((prev) => [article, ...prev]);
+    if (!article.videoUrl) {
+      delete article.videoUrl;
+    }
+
+    setNews((prev) => {
+      const next = [article, ...prev];
+      localStorage.setItem('info_game_news', JSON.stringify(next));
+      return next;
+    });
 
     if (isFirebaseActive()) {
       saveNewsToFirestore(article).catch(console.error);
@@ -259,8 +267,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setNews((prev) => {
       const updated = prev.map((n) => {
         if (n.id === id) {
-          const sanitizedVideo = updatedNews.videoUrl !== undefined ? formatEmbedUrl(updatedNews.videoUrl) : n.videoUrl;
-          const newsUpdated = { ...n, ...updatedNews, videoUrl: sanitizedVideo };
+          let finalVideoUrl: string | undefined;
+          if ('videoUrl' in updatedNews) {
+            const raw = updatedNews.videoUrl ? updatedNews.videoUrl.trim() : '';
+            finalVideoUrl = raw ? formatEmbedUrl(raw) : undefined;
+          } else {
+            finalVideoUrl = n.videoUrl;
+          }
+
+          const newsUpdated: NewsArticle = {
+            ...n,
+            ...updatedNews,
+          };
+
+          if (finalVideoUrl) {
+            newsUpdated.videoUrl = finalVideoUrl;
+          } else {
+            delete newsUpdated.videoUrl;
+          }
+
           if (isFirebaseActive()) {
             saveNewsToFirestore(newsUpdated).catch(console.error);
           }
@@ -268,6 +293,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
         return n;
       });
+      localStorage.setItem('info_game_news', JSON.stringify(updated));
       return updated;
     });
   };

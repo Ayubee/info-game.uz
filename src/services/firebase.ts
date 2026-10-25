@@ -138,7 +138,15 @@ export const deleteGameFromFirestore = async (gameId: string) => {
 export const saveNewsToFirestore = async (article: NewsArticle) => {
   const db = initFirebase();
   if (!db) return;
-  await setDoc(doc(db, 'news', article.id), article);
+  const cleanData: Record<string, any> = {};
+  for (const [key, value] of Object.entries(article)) {
+    if (value !== undefined) {
+      cleanData[key] = value;
+    }
+  }
+  // If videoUrl was removed or empty, save as empty string so Firestore updates
+  cleanData.videoUrl = article.videoUrl || '';
+  await setDoc(doc(db, 'news', article.id), cleanData);
 };
 
 export const deleteNewsFromFirestore = async (articleId: string) => {
