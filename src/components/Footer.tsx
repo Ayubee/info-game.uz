@@ -88,7 +88,7 @@ export const Footer: React.FC = () => {
           </div>
         </div>
 
-        {/* Bottom bar with subtle discrete admin access */}
+        {/* Bottom bar */}
         <div className="pt-6 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-3 text-slate-500 text-[11px]">
           <div>
             © {new Date().getFullYear()} INFO-GAME.UZ. {t('footer.rights')}
@@ -96,11 +96,6 @@ export const Footer: React.FC = () => {
           
           <div className="flex items-center gap-4">
             <span>{t('footer.location')}</span>
-            {/* Subtle, secret link to admin panel */}
-            <Link to="/admin" className="text-slate-600 hover:text-slate-400 transition-colors flex items-center gap-1">
-              <span>🔒</span>
-              <span className="text-[10px]">{t('footer.system')}</span>
-            </Link>
           </div>
         </div>
       </div>

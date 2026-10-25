@@ -454,16 +454,10 @@ export const GameWikiPage: React.FC = () => {
               </div>
 
               {/* Notice */}
-              <div className="bg-[#00e5ff]/5 border border-[#00e5ff]/20 rounded-xl p-4 flex items-center justify-between">
-                <div className="text-xs text-slate-300">
+              <div className="bg-[#00e5ff]/5 border border-[#00e5ff]/20 rounded-xl p-4">
+                <p className="text-xs text-slate-300">
                   <strong className="text-[#00e5ff]">{t('wiki.upcomingNotice')}</strong> {t('wiki.upcomingNoticeText')}
-                </div>
-                <Link
-                  to="/admin"
-                  className="bg-[#00e5ff]/10 hover:bg-[#00e5ff]/20 text-[#00e5ff] text-xs font-bold px-3 py-1.5 rounded-lg border border-[#00e5ff]/30 transition-colors ml-4 flex-shrink-0"
-                >
-                  {t('wiki.addInfo')}
-                </Link>
+                </p>
               </div>
             </div>
           )}
