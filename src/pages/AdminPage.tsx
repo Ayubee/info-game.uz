@@ -6,6 +6,7 @@ import {
   DownloadCloud, RefreshCw, Upload, FileImage, CloudLightning, Flame, Globe
 } from 'lucide-react';
 import { Game, NewsArticle, WikiItem } from '../types';
+import { formatEmbedUrl } from '../utils/video';
 
 const processImageFile = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -213,7 +214,7 @@ export const AdminPage: React.FC = () => {
         en: newsContentEn.trim() || defaultContent 
       },
       coverImage: newsCover || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80',
-      videoUrl: newsVideoUrl.trim() || undefined,
+      videoUrl: newsVideoUrl.trim() ? formatEmbedUrl(newsVideoUrl.trim()) : undefined,
       gameId: finalGameId,
       tags: selectedTags.length > 0 ? selectedTags : ['Yangilik'],
       author: newsAuthor,
@@ -313,7 +314,10 @@ export const AdminPage: React.FC = () => {
     e.preventDefault();
     if (!editingNews) return;
 
-    updateNews(editingNews.id, editingNews);
+    updateNews(editingNews.id, {
+      ...editingNews,
+      videoUrl: editingNews.videoUrl ? formatEmbedUrl(editingNews.videoUrl) : undefined,
+    });
     setEditingNews(null);
     showNotification("Maqola muvaffaqiyatli tahrirlandi!");
   };
@@ -348,12 +352,12 @@ export const AdminPage: React.FC = () => {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-black text-white">Boshqaruv Paneli (Admin CMS)</h1>
+                <h1 className="text-2xl font-black text-white">{t('admin.headerTitle')}</h1>
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1 ${
                   isFirebaseConnected ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
                 }`}>
                   <span className={`w-1.5 h-1.5 rounded-full ${isFirebaseConnected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
-                  {isFirebaseConnected ? "Google Firebase Faol (Jonli Baza)" : "Lokal Rejim"}
+                  {isFirebaseConnected ? t('admin.connected') : t('admin.localMode')}
                 </span>
               </div>
               <p className="text-slate-400 text-xs mt-0.5">
@@ -363,7 +367,7 @@ export const AdminPage: React.FC = () => {
           </div>
 
           <div className="text-xs text-slate-400 bg-[#070e17] px-4 py-2 rounded-xl border border-white/10 font-mono">
-            Bazada: <strong className="text-white">{games.length} ta o'yin</strong> | <strong className="text-white">{news.length} ta post</strong>
+            {t('admin.inDb')} <strong className="text-white">{games.length} {t('admin.gamesCount')}</strong> | <strong className="text-white">{news.length} {t('admin.postsCount')}</strong>
           </div>
         </div>
 
@@ -386,7 +390,7 @@ export const AdminPage: React.FC = () => {
             }`}
           >
             <Newspaper className="w-4 h-4" />
-            <span>📰 Yangiliklar & Postlar ({news.length})</span>
+            <span>{t('admin.tabNewsLabel')} ({news.length})</span>
           </button>
 
           <button
@@ -398,7 +402,7 @@ export const AdminPage: React.FC = () => {
             }`}
           >
             <Gamepad2 className="w-4 h-4" />
-            <span>🎮 O'yinlar Ensiklopediyasi & Sharhlari ({games.length})</span>
+            <span>{t('admin.tabWikiLabel')} ({games.length})</span>
           </button>
 
           <button
@@ -410,7 +414,7 @@ export const AdminPage: React.FC = () => {
             }`}
           >
             <Flame className="w-4 h-4 text-amber-300" />
-            <span>🔥 Google Firebase Baza Holati</span>
+            <span>{t('admin.tabDatabaseLabel')}</span>
             {isFirebaseConnected && <span className="text-[9px] bg-white/20 px-1.5 py-0.2 rounded font-mono">ULANDI</span>}
           </button>
         </div>
@@ -742,15 +746,18 @@ export const AdminPage: React.FC = () => {
                 <div>
                   <label className="text-xs font-bold text-slate-300 flex items-center gap-1.5 mb-1">
                     <Video className="w-3.5 h-3.5 text-[#ff4655]" />
-                    <span>Video Ssilka (YouTube Embed, ixtiyoriy)</span>
+                    <span>Video Ssilka (YouTube / Shorts / youtu.be, ixtiyoriy)</span>
                   </label>
                   <input
                     type="url"
                     value={newsVideoUrl}
                     onChange={(e) => setNewsVideoUrl(e.target.value)}
-                    placeholder="https://www.youtube.com/embed/..."
+                    placeholder="https://www.youtube.com/watch?v=... yoki https://youtu.be/..."
                     className="w-full bg-[#070e17] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-[#00e5ff]"
                   />
+                  <span className="text-[10px] text-slate-500 mt-1 block">
+                    Istalgan YouTube ssilkasini qo'yishingiz mumkin, tizim uni avtomatik tarzda to'g'ri ko'rinishga keltiradi.
+                  </span>
                 </div>
 
                 <div>
@@ -1282,12 +1289,12 @@ export const AdminPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-slate-300 block mb-1">Video Ssilka (YouTube embed)</label>
+                  <label className="text-xs font-bold text-slate-300 block mb-1">Video Ssilka (YouTube)</label>
                   <input
                     type="url"
                     value={editingNews.videoUrl || ''}
                     onChange={(e) => setEditingNews({ ...editingNews, videoUrl: e.target.value })}
-                    placeholder="https://www.youtube.com/embed/..."
+                    placeholder="https://www.youtube.com/watch?v=... yoki https://youtu.be/..."
                     className="w-full bg-[#070e17] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none"
                   />
                 </div>

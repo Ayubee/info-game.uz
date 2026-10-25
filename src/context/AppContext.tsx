@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Game, NewsArticle, Language, LocalizedString, WikiItem } from '../types';
 import { INITIAL_GAMES, INITIAL_NEWS } from '../data/mockData';
+import { translations, attributeTranslations } from '../i18n/translations';
+import { formatEmbedUrl } from '../utils/video';
 import { 
   isFirebaseActive, 
   syncGamesFromFirestore, 
@@ -45,7 +47,7 @@ interface AppContextType {
 
   incrementNewsViews: (newsId: string) => void;
 
-  t: (loc: LocalizedString | string) => string;
+  t: (loc: LocalizedString | string | null | undefined, fallback?: string) => string;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -106,6 +108,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [news]);
 
   const setLanguage = (lang: Language) => {
+    localStorage.setItem('info_game_lang', lang);
+    if (typeof document !== 'undefined') {
+      document.documentElement.lang = lang;
+    }
     setLanguageState(lang);
   };
 
@@ -161,7 +167,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       summary: newArticle.summary || { uz: '', ru: '', en: '' },
       content: newArticle.content || { uz: '', ru: '', en: '' },
       coverImage: newArticle.coverImage || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80',
-      videoUrl: newArticle.videoUrl || '',
+      videoUrl: formatEmbedUrl(newArticle.videoUrl || ''),
       gameId: newArticle.gameId || 'all',
       tags: newArticle.tags || ['O\'yinlar'],
       author: newArticle.author || 'Admin',
@@ -221,7 +227,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setNews((prev) => {
       const updated = prev.map((n) => {
         if (n.id === id) {
-          const newsUpdated = { ...n, ...updatedNews };
+          const sanitizedVideo = updatedNews.videoUrl !== undefined ? formatEmbedUrl(updatedNews.videoUrl) : n.videoUrl;
+          const newsUpdated = { ...n, ...updatedNews, videoUrl: sanitizedVideo };
           if (isFirebaseActive()) {
             saveNewsToFirestore(newsUpdated).catch(console.error);
           }
@@ -433,10 +440,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
   };
 
-  const t = (loc: LocalizedString | string): string => {
-    if (!loc) return '';
-    if (typeof loc === 'string') return loc;
-    return loc[language] || loc['uz'] || loc['en'] || loc['ru'] || '';
+  const t = (loc: LocalizedString | string | null | undefined, fallback?: string): string => {
+    if (!loc) return fallback || '';
+    if (typeof loc === 'object') {
+      return loc[language] || loc['uz'] || loc['en'] || loc['ru'] || fallback || '';
+    }
+    const langDict = translations[language];
+    if (langDict && loc in langDict) {
+      return (langDict as Record<string, string>)[loc];
+    }
+    if (attributeTranslations[loc]) {
+      if (language === 'uz') return loc;
+      return attributeTranslations[loc][language] || loc;
+    }
+    return fallback || loc;
   };
 
   return (

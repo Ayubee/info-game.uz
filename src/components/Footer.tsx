@@ -4,7 +4,7 @@ import { Compass, ShieldCheck } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 export const Footer: React.FC = () => {
-  const { games, t } = useApp();
+  const { t } = useApp();
 
   return (
     <footer className="bg-[#050911] border-t border-white/10 mt-auto text-slate-400 text-xs">
@@ -22,34 +22,34 @@ export const Footer: React.FC = () => {
               </span>
             </div>
             <p className="text-slate-400 leading-relaxed text-xs">
-              O'zbekistondagi eng to'liq geymerlar ensiklopediyasi, retseptlar va o'yin yangiliklari portali.
+              {t('footer.brandDesc')}
             </p>
           </div>
 
           {/* Quick News Topics */}
           <div>
             <div className="text-white font-bold text-xs uppercase tracking-wider mb-3">
-              Yangiliklar Mavzulari
+              {t('footer.newsTopics')}
             </div>
             <ul className="space-y-2">
               <li>
                 <Link to="/news" className="hover:text-[#00e5ff] transition-colors">
-                  🔥 GTA 6 Reliz Tafsilotlari
+                  {t('footer.topicGta')}
                 </Link>
               </li>
               <li>
                 <Link to="/news" className="hover:text-[#00e5ff] transition-colors">
-                  🎯 Counter-Strike 2 Yangilanishlari
+                  {t('footer.topicCs2')}
                 </Link>
               </li>
               <li>
                 <Link to="/news" className="hover:text-[#00e5ff] transition-colors">
-                  ⛏️ Minecraft Patchlar
+                  {t('footer.topicMinecraft')}
                 </Link>
               </li>
               <li>
                 <Link to="/news" className="hover:text-[#00e5ff] transition-colors">
-                  🎬 Yangi O'yin Treylerlari
+                  {t('footer.topicTrailers')}
                 </Link>
               </li>
             </ul>
@@ -58,17 +58,17 @@ export const Footer: React.FC = () => {
           {/* Sections */}
           <div>
             <div className="text-white font-bold text-xs uppercase tracking-wider mb-3">
-              Ruknlar
+              {t('footer.sections')}
             </div>
             <ul className="space-y-2">
               <li>
-                <Link to="/" className="hover:text-[#00e5ff]">Bosh Sahifa</Link>
+                <Link to="/" className="hover:text-[#00e5ff]">{t('nav.home')}</Link>
               </li>
               <li>
-                <Link to="/news" className="hover:text-[#00e5ff]">Barcha O'yin Yangiliklari</Link>
+                <Link to="/news" className="hover:text-[#00e5ff]">{t('footer.allGamingNews')}</Link>
               </li>
               <li>
-                <Link to="/news" className="hover:text-[#00e5ff]">Kutilayotgan Relizlar</Link>
+                <Link to="/news" className="hover:text-[#00e5ff]">{t('footer.upcomingReleases')}</Link>
               </li>
             </ul>
           </div>
@@ -76,14 +76,14 @@ export const Footer: React.FC = () => {
           {/* Legal & Notice */}
           <div>
             <div className="text-white font-bold text-xs uppercase tracking-wider mb-3">
-              Ma'lumot
+              {t('footer.info')}
             </div>
             <p className="text-slate-500 text-[11px] leading-relaxed mb-3">
-              Barcha o'yin nomlari va tasvirlari ularning tegishli mualliflariga (Redbeet, Valve, Facepunch va h.k.) tegishli. Ma'lumotlar o'yin fan hamjamiyatlari (Fandom/Wikia) asosida ta'limiy maqsadda yoritilgan.
+              {t('footer.disclaimer')}
             </p>
             <div className="flex items-center gap-2 text-slate-500 text-[11px]">
               <ShieldCheck className="w-4 h-4 text-[#00e5ff]" />
-              <span>CC BY-SA Litsenziyasi</span>
+              <span>{t('footer.license')}</span>
             </div>
           </div>
         </div>
@@ -91,15 +91,15 @@ export const Footer: React.FC = () => {
         {/* Bottom bar with subtle discrete admin access */}
         <div className="pt-6 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-3 text-slate-500 text-[11px]">
           <div>
-            © {new Date().getFullYear()} INFO-GAME.UZ. Barcha huquqlar himoyalangan.
+            © {new Date().getFullYear()} INFO-GAME.UZ. {t('footer.rights')}
           </div>
           
           <div className="flex items-center gap-4">
-            <span>Toshkent, O'zbekiston</span>
+            <span>{t('footer.location')}</span>
             {/* Subtle, secret link to admin panel */}
             <Link to="/admin" className="text-slate-600 hover:text-slate-400 transition-colors flex items-center gap-1">
               <span>🔒</span>
-              <span className="text-[10px]">Tizim</span>
+              <span className="text-[10px]">{t('footer.system')}</span>
             </Link>
           </div>
         </div>

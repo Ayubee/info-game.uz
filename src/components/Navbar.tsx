@@ -60,13 +60,7 @@ export const Navbar: React.FC = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={
-                language === 'uz'
-                  ? "O'yin yangiliklari, maqola va sharhlarni qidiring..."
-                  : language === 'ru'
-                  ? "Поиск новостей, статей и обзоров игр..."
-                  : "Search gaming news, articles, and reviews..."
-              }
+              placeholder={t('nav.searchPlaceholder')}
               className="w-full bg-[#050a12] border border-white/10 focus:border-[#00e5ff]/60 rounded-xl pl-9 pr-12 py-1.5 text-xs text-slate-200 placeholder-slate-500 outline-none transition-all"
             />
             <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] bg-white/5 border border-white/10 px-1.5 py-0.5 rounded font-mono text-slate-400">
@@ -82,13 +76,19 @@ export const Navbar: React.FC = () => {
               to="/"
               className={`hover:text-[#00e5ff] transition-colors ${location.pathname === '/' ? 'text-[#00e5ff] font-bold' : ''}`}
             >
-              {language === 'uz' ? "Bosh Sahifa" : language === 'ru' ? "Главная" : "Home"}
+              {t('nav.home')}
+            </Link>
+            <Link
+              to="/games"
+              className={`hover:text-[#00e5ff] transition-colors ${location.pathname.startsWith('/games') ? 'text-[#00e5ff] font-bold' : ''}`}
+            >
+              {t('nav.games')}
             </Link>
             <Link
               to="/news"
               className={`hover:text-[#00e5ff] transition-colors ${location.pathname.startsWith('/news') ? 'text-[#00e5ff] font-bold' : ''}`}
             >
-              {language === 'uz' ? "Barcha Yangiliklar" : language === 'ru' ? "Все Новости" : "All News"}
+              {t('nav.allNews')}
             </Link>
           </nav>
 
@@ -144,7 +144,7 @@ export const Navbar: React.FC = () => {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Yangiliklardan qidiruv..."
+                placeholder={t('nav.searchMobile')}
                 className="w-full bg-[#050a12] border border-white/10 rounded-lg pl-9 pr-3 py-2 text-xs text-white"
               />
             </div>
@@ -156,14 +156,21 @@ export const Navbar: React.FC = () => {
               onClick={() => setMobileMenuOpen(false)}
               className="px-3 py-2 rounded-lg text-xs font-bold text-slate-200 hover:bg-white/5"
             >
-              Bosh Sahifa
+              {t('nav.home')}
+            </Link>
+            <Link
+              to="/games"
+              onClick={() => setMobileMenuOpen(false)}
+              className="px-3 py-2 rounded-lg text-xs font-bold text-slate-200 hover:bg-white/5"
+            >
+              {t('nav.games')}
             </Link>
             <Link
               to="/news"
               onClick={() => setMobileMenuOpen(false)}
               className="px-3 py-2 rounded-lg text-xs font-bold text-[#00e5ff] hover:bg-white/5"
             >
-              Barcha Yangiliklar
+              {t('nav.allNews')}
             </Link>
           </div>
         </div>

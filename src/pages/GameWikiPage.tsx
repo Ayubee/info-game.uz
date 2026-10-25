@@ -37,8 +37,8 @@ export const GameWikiPage: React.FC = () => {
   if (!game) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-20 text-center">
-        <h2 className="text-2xl font-bold text-white mb-2">O'yin topilmadi</h2>
-        <Link to="/" className="text-[#00e5ff] text-sm hover:underline">Bosh sahifaga qaytish</Link>
+        <h2 className="text-2xl font-bold text-white mb-2">{t('wiki.gameNotFound')}</h2>
+        <Link to="/" className="text-[#00e5ff] text-sm hover:underline">{t('wiki.backToHome')}</Link>
       </div>
     );
   }
@@ -62,14 +62,14 @@ export const GameWikiPage: React.FC = () => {
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <div className="flex items-center gap-2 text-xs text-slate-400 mb-1">
-              <Link to="/" className="hover:text-white">Bosh Sahifa</Link>
+              <Link to="/" className="hover:text-white">{t('wiki.home')}</Link>
               <span>&gt;</span>
               <span className="text-[#00e5ff] font-semibold">{game.name}</span>
             </div>
             <h1 className="text-xl sm:text-2xl font-black text-white flex items-center gap-3">
-              <span>{game.name} — Ensiklopediya</span>
+              <span>{game.name} {t('wiki.suffix')}</span>
               <span className="text-xs bg-[#00e5ff]/20 text-[#00e5ff] border border-[#00e5ff]/40 px-2 py-0.5 rounded-full font-mono">
-                {game.items.length} ta Maqola
+                {game.items.length} {t('wiki.articlesCount')}
               </span>
             </h1>
           </div>
@@ -82,7 +82,7 @@ export const GameWikiPage: React.FC = () => {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white text-xs px-3 py-1.5 rounded-lg transition-colors"
             >
-              <span>Asl Manba: Fandom Wiki</span>
+              <span>{t('wiki.originalSource')}</span>
               <ExternalLink className="w-3.5 h-3.5 text-[#00e5ff]" />
             </a>
           )}
@@ -95,14 +95,14 @@ export const GameWikiPage: React.FC = () => {
         {/* Mobile Filter Toggle */}
         <div className="lg:hidden col-span-1 flex items-center justify-between bg-[#0b1424] p-3 rounded-xl border border-white/10">
           <span className="text-xs font-bold text-slate-300">
-            Kategoriya: <strong className="text-[#00e5ff]">{activeCategory.toUpperCase()}</strong>
+            {t('wiki.categoryLabel')} <strong className="text-[#00e5ff]">{activeCategory === 'all' ? t('wiki.allCategories') : activeCategory.toUpperCase()}</strong>
           </span>
           <button
             onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
             className="flex items-center gap-1.5 bg-[#00e5ff]/10 text-[#00e5ff] border border-[#00e5ff]/30 text-xs px-3 py-1 rounded-lg font-bold"
           >
             <Filter className="w-3.5 h-3.5" />
-            <span>Kategoriyalar</span>
+            <span>{t('wiki.categoriesBtn')}</span>
           </button>
         </div>
 
@@ -117,7 +117,7 @@ export const GameWikiPage: React.FC = () => {
               type="text"
               value={filterText}
               onChange={(e) => setFilterText(e.target.value)}
-              placeholder="Tezkor qidiruv..."
+              placeholder={t('wiki.searchPlaceholder')}
               className="w-full bg-[#050a12] border border-white/10 focus:border-[#00e5ff]/50 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 outline-none"
             />
           </div>
@@ -125,7 +125,7 @@ export const GameWikiPage: React.FC = () => {
           {/* Categories Filter */}
           <div>
             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 px-1">
-              Kategoriyalar
+              {t('wiki.categoriesTitle')}
             </div>
             <div className="space-y-1">
               <button
@@ -136,7 +136,7 @@ export const GameWikiPage: React.FC = () => {
                     : 'text-slate-300 hover:bg-white/5'
                 }`}
               >
-                <span>📦 Barchasi</span>
+                <span>{t('wiki.allCategories')}</span>
                 <span className="text-[10px] opacity-70">{game.items.length}</span>
               </button>
 
@@ -166,12 +166,12 @@ export const GameWikiPage: React.FC = () => {
           {/* Filtered Item List */}
           <div className="flex-1 border-t border-white/10 pt-4">
             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 px-1">
-              Mavjud Buyumlar ({filteredItems.length})
+              {t('wiki.availableItems')} ({filteredItems.length})
             </div>
             
             {filteredItems.length === 0 ? (
               <div className="text-center py-6 text-xs text-slate-500">
-                Hech narsa topilmadi
+                {t('wiki.notFound')}
               </div>
             ) : (
               <div className="space-y-1 max-h-[350px] overflow-y-auto pr-1">
@@ -244,7 +244,7 @@ export const GameWikiPage: React.FC = () => {
                     activeTab === 'overview' ? 'text-[#00e5ff]' : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  📄 Umumiy Ma'lumot
+                  {t('wiki.tabOverview')}
                   {activeTab === 'overview' && (
                     <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#00e5ff]" />
                   )}
@@ -255,7 +255,7 @@ export const GameWikiPage: React.FC = () => {
                     activeTab === 'recipe' ? 'text-[#00e5ff]' : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  🔨 Retsept & Manba
+                  {t('wiki.tabRecipe')}
                   {activeTab === 'recipe' && (
                     <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#00e5ff]" />
                   )}
@@ -266,7 +266,7 @@ export const GameWikiPage: React.FC = () => {
                     activeTab === 'tips' ? 'text-[#00e5ff]' : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  💡 Maslahatlar
+                  {t('wiki.tabTips')}
                   {activeTab === 'tips' && (
                     <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#00e5ff]" />
                   )}
@@ -280,16 +280,16 @@ export const GameWikiPage: React.FC = () => {
                   {activeItem.attributes && Object.keys(activeItem.attributes).length > 0 && (
                     <div>
                       <div className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-3">
-                        Asosiy Ko'rsatkichlar
+                        {t('wiki.keyStats')}
                       </div>
                       <div className="grid grid-cols-2 sm:grid-cols-2 gap-3">
                         {Object.entries(activeItem.attributes).map(([key, value]) => (
                           <div key={key} className="bg-[#070e17] border border-white/5 rounded-xl p-3">
                             <span className="text-[10px] text-slate-400 uppercase font-semibold block mb-0.5">
-                              {key}
+                              {t(key)}
                             </span>
                             <span className="text-xs font-bold text-white">
-                              {value}
+                              {t(String(value))}
                             </span>
                           </div>
                         ))}
@@ -302,7 +302,7 @@ export const GameWikiPage: React.FC = () => {
                     <div className="bg-[#00e5ff]/10 border-l-4 border-[#00e5ff] p-4 rounded-r-xl">
                       <div className="flex items-center gap-2 text-xs font-bold text-[#00e5ff] mb-1">
                         <Sparkles className="w-4 h-4" />
-                        <span>Muhim Eslatma</span>
+                        <span>{t('wiki.importantNote')}</span>
                       </div>
                       <p className="text-xs text-slate-300 leading-relaxed">
                         {t(activeItem.tips)}
@@ -318,15 +318,15 @@ export const GameWikiPage: React.FC = () => {
                   {activeItem.recipe && activeItem.recipe.ingredients && activeItem.recipe.ingredients.length > 0 ? (
                     <div>
                       <div className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-3">
-                        Kerakli Komponentlar & Dastgoh
+                        {t('wiki.requiredComponents')}
                       </div>
 
                       <div className="bg-[#070e17] border border-white/10 rounded-xl overflow-hidden">
                         <table className="w-full text-left text-xs">
                           <thead className="bg-white/5 text-slate-400 font-bold border-b border-white/5">
                             <tr>
-                              <th className="p-3">Material / Ingredient</th>
-                              <th className="p-3 text-right">Miqdor</th>
+                              <th className="p-3">{t('wiki.thMaterial')}</th>
+                              <th className="p-3 text-right">{t('wiki.thQuantity')}</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-white/5">
@@ -346,15 +346,15 @@ export const GameWikiPage: React.FC = () => {
                       </div>
 
                       <div className="mt-3 flex items-center justify-between text-xs text-slate-400 bg-[#070e17] p-3 rounded-xl border border-white/5">
-                        <span>Ishlatiladigan Dastgoh: <strong className="text-white">{activeItem.recipe.station || "Qo'lda"}</strong></span>
+                        <span>{t('wiki.craftStation')} <strong className="text-white">{activeItem.recipe.station || t('wiki.byHand')}</strong></span>
                         {activeItem.recipe.craftTime && (
-                          <span>Vaqt: <strong className="text-amber-400">{activeItem.recipe.craftTime}</strong></span>
+                          <span>{t('wiki.time')} <strong className="text-amber-400">{activeItem.recipe.craftTime}</strong></span>
                         )}
                       </div>
                     </div>
                   ) : (
                     <div className="text-center py-8 text-xs text-slate-400 bg-[#070e17] rounded-xl border border-white/5">
-                      Ushbu o'yinda hunarmandchilik / crafting tizimi mavjud emas yoki bu buyum uchun retsept talab qilinmaydi.
+                      {t('wiki.noCraft')}
                     </div>
                   )}
                 </div>
@@ -364,7 +364,7 @@ export const GameWikiPage: React.FC = () => {
               {activeTab === 'tips' && (
                 <div className="space-y-4">
                   <div className="bg-[#070e17] border border-white/10 rounded-xl p-4 text-xs text-slate-300 leading-relaxed">
-                    {activeItem.tips ? t(activeItem.tips) : "Ushbu buyum uchun maxsus maslahat hozircha kiritilmagan."}
+                    {activeItem.tips ? t(activeItem.tips) : t('wiki.noTips')}
                   </div>
                 </div>
               )}
@@ -375,13 +375,13 @@ export const GameWikiPage: React.FC = () => {
               <div className="flex items-center justify-between border-b border-white/10 pb-4">
                 <div>
                   <div className="text-xs font-bold text-[#00e5ff] uppercase tracking-wider mb-1">
-                    {game.isUpcoming ? "⏳ Chiqishi Kutilayotgan O'yin Sharhi" : "Ensiklopediya & Umumiy Ma'lumot"}
+                    {game.isUpcoming ? t('wiki.upcomingGameReview') : t('wiki.generalInfo')}
                   </div>
                   <h2 className="text-2xl font-black text-white">{game.name}</h2>
                 </div>
                 {game.releaseDateExact && (
                   <div className="bg-amber-500/10 border border-amber-500/30 px-3 py-1 rounded-xl text-right">
-                    <span className="text-[10px] text-amber-400 font-bold block">RELIZ SANASI</span>
+                    <span className="text-[10px] text-amber-400 font-bold block">{t('wiki.releaseDate')}</span>
                     <span className="text-xs font-black text-white">{game.releaseDateExact}</span>
                   </div>
                 )}
@@ -396,7 +396,7 @@ export const GameWikiPage: React.FC = () => {
 
               {/* Overview / Story Content */}
               <div className="space-y-4">
-                <h3 className="text-sm font-bold text-slate-200">O'yin Haqida Tafsilotlar:</h3>
+                <h3 className="text-sm font-bold text-slate-200">{t('wiki.gameDetails')}</h3>
                 <div className="bg-[#070e17] border border-white/5 rounded-xl p-4 text-xs text-slate-300 leading-relaxed whitespace-pre-line">
                   {game.overviewArticle ? t(game.overviewArticle) : (game.description ? t(game.description) : t(game.tagline))}
                 </div>
@@ -405,15 +405,15 @@ export const GameWikiPage: React.FC = () => {
               {/* Quick Metadata Box */}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
                 <div className="bg-[#070e17] border border-white/5 rounded-xl p-3">
-                  <span className="text-[10px] text-slate-400 uppercase font-bold block mb-0.5">Ishlab chiqaruvchi</span>
+                  <span className="text-[10px] text-slate-400 uppercase font-bold block mb-0.5">{t('wiki.developer')}</span>
                   <span className="text-xs font-bold text-white">{game.developer || "Rockstar Games"}</span>
                 </div>
                 <div className="bg-[#070e17] border border-white/5 rounded-xl p-3">
-                  <span className="text-[10px] text-slate-400 uppercase font-bold block mb-0.5">Chiqarilish Yili</span>
+                  <span className="text-[10px] text-slate-400 uppercase font-bold block mb-0.5">{t('wiki.releaseYear')}</span>
                   <span className="text-xs font-bold text-[#00e5ff]">{game.releaseDateExact || game.releaseYear}</span>
                 </div>
                 <div className="bg-[#070e17] border border-white/5 rounded-xl p-3 col-span-2 sm:col-span-1">
-                  <span className="text-[10px] text-slate-400 uppercase font-bold block mb-0.5">Janrlar</span>
+                  <span className="text-[10px] text-slate-400 uppercase font-bold block mb-0.5">{t('wiki.genres')}</span>
                   <span className="text-xs font-bold text-white truncate block">{game.genre.join(', ')}</span>
                 </div>
               </div>
@@ -421,13 +421,13 @@ export const GameWikiPage: React.FC = () => {
               {/* Notice */}
               <div className="bg-[#00e5ff]/5 border border-[#00e5ff]/20 rounded-xl p-4 flex items-center justify-between">
                 <div className="text-xs text-slate-300">
-                  <strong className="text-[#00e5ff]">Eslatma:</strong> O'yin chiqqandan so'ng xaritalar, qurollar va barcha maxsus ma'lumotlar ushbu bo'limga qo'shib boriladi.
+                  <strong className="text-[#00e5ff]">{t('wiki.upcomingNotice')}</strong> {t('wiki.upcomingNoticeText')}
                 </div>
                 <Link
                   to="/admin"
                   className="bg-[#00e5ff]/10 hover:bg-[#00e5ff]/20 text-[#00e5ff] text-xs font-bold px-3 py-1.5 rounded-lg border border-[#00e5ff]/30 transition-colors ml-4 flex-shrink-0"
                 >
-                  + Ma'lumot qo'shish
+                  {t('wiki.addInfo')}
                 </Link>
               </div>
             </div>
@@ -442,17 +442,17 @@ export const GameWikiPage: React.FC = () => {
           {/* Quick Table of Contents (On this page) */}
           <div className="bg-[#0b1424]/80 backdrop-blur border border-white/10 rounded-2xl p-4">
             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">
-              Ushbu Sahifada
+              {t('wiki.onThisPage')}
             </div>
             <div className="space-y-1.5 text-xs text-slate-400">
               <button onClick={() => setActiveTab('overview')} className="block hover:text-[#00e5ff] text-left">
-                1. Umumiy tavsif va xususiyatlar
+                {t('wiki.toc1')}
               </button>
               <button onClick={() => setActiveTab('recipe')} className="block hover:text-[#00e5ff] text-left">
-                2. Hunarmandchilik retseptlari
+                {t('wiki.toc2')}
               </button>
               <button onClick={() => setActiveTab('tips')} className="block hover:text-[#00e5ff] text-left">
-                3. Taktik maslahatlar
+                {t('wiki.toc3')}
               </button>
             </div>
           </div>
@@ -463,7 +463,7 @@ export const GameWikiPage: React.FC = () => {
               <div className="flex items-center justify-between text-xs font-bold text-[#00e5ff] mb-3">
                 <span className="flex items-center gap-1.5">
                   <Compass className="w-4 h-4" />
-                  <span>Radar Kodlari</span>
+                  <span>{t('wiki.radarCodes')}</span>
                 </span>
                 <span className="text-[9px] bg-[#00e5ff]/20 px-1.5 py-0.5 rounded font-mono">STORY</span>
               </div>
@@ -492,7 +492,7 @@ export const GameWikiPage: React.FC = () => {
           {/* Other Games List Widget */}
           <div className="bg-[#0b1424] border border-white/10 rounded-2xl p-4">
             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">
-              Boshqa O'yinlar
+              {t('wiki.otherGames')}
             </div>
             <div className="flex flex-wrap gap-1.5">
               {['CS2', 'Rust', 'Minecraft', 'The Forest', 'Subnautica'].map((gName) => (

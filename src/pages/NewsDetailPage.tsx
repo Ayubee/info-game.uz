@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { Calendar, User, Eye, ArrowLeft, Share2, Sparkles } from 'lucide-react';
+import { formatEmbedUrl } from '../utils/video';
 
 export const NewsDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -18,9 +19,9 @@ export const NewsDetailPage: React.FC = () => {
   if (!article) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-20 text-center">
-        <h2 className="text-xl font-bold text-white mb-2">Maqola topilmadi</h2>
+        <h2 className="text-xl font-bold text-white mb-2">{t('newsDetail.notFound')}</h2>
         <Link to="/news" className="text-[#00e5ff] text-xs hover:underline">
-          Yangiliklar ro'yxatiga qaytish
+          {t('newsDetail.backToList')}
         </Link>
       </div>
     );
@@ -36,14 +37,14 @@ export const NewsDetailPage: React.FC = () => {
           className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-[#00e5ff] font-semibold transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Barcha Yangiliklarga Qaytish</span>
+          <span>{t('newsDetail.backToNews')}</span>
         </Link>
 
         {/* Article Meta */}
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-bold bg-[#00e5ff]/20 text-[#00e5ff] border border-[#00e5ff]/40 px-2.5 py-0.5 rounded-full uppercase">
-              {article.gameId?.toUpperCase() || 'O\'YIN YANGILIGI'}
+              {article.gameId?.toUpperCase() || t('newsDetail.gameNews')}
             </span>
             <span className="text-slate-500 text-xs">•</span>
             <span className="text-xs text-slate-400 flex items-center gap-1">
@@ -59,11 +60,11 @@ export const NewsDetailPage: React.FC = () => {
           <div className="flex items-center justify-between text-xs text-slate-400 py-3 border-y border-white/10">
             <div className="flex items-center gap-2">
               <User className="w-4 h-4 text-[#00e5ff]" />
-              <span>Muallif: <strong className="text-white">{article.author}</strong></span>
+              <span>{t('newsDetail.author')} <strong className="text-white">{article.author}</strong></span>
             </div>
             <div className="flex items-center gap-1">
               <Eye className="w-4 h-4" />
-              <span>{article.views} marta ko'rildi</span>
+              <span>{article.views} {t('newsDetail.views')}</span>
             </div>
           </div>
         </div>
@@ -72,10 +73,10 @@ export const NewsDetailPage: React.FC = () => {
         {article.videoUrl ? (
           <div className="aspect-video w-full rounded-2xl overflow-hidden bg-black border border-white/10 shadow-2xl">
             <iframe
-              src={article.videoUrl}
+              src={formatEmbedUrl(article.videoUrl)}
               title={t(article.title)}
               className="w-full h-full"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen
             />
           </div>
@@ -103,8 +104,8 @@ export const NewsDetailPage: React.FC = () => {
         {article.sourceUrl && (
           <div className="bg-[#0b1424] border border-[#00e5ff]/20 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="text-xs text-slate-300 flex items-center gap-2">
-              <span className="text-[#00e5ff] font-bold">Asl Manba:</span>
-              <span>{article.sourceName || "Rasmiy Sayt / Istochnik"}</span>
+              <span className="text-[#00e5ff] font-bold">{t('newsDetail.originalSource')}</span>
+              <span>{article.sourceName || t('newsDetail.defaultSource')}</span>
             </div>
             <a
               href={article.sourceUrl}
@@ -112,7 +113,7 @@ export const NewsDetailPage: React.FC = () => {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 bg-[#00e5ff]/10 hover:bg-[#00e5ff]/20 text-[#00e5ff] border border-[#00e5ff]/30 text-xs px-3 py-1.5 rounded-lg transition-colors font-bold"
             >
-              <span>Manba Sahifasiga O'tish</span>
+              <span>{t('newsDetail.goToSource')}</span>
               <span className="text-sm">↗</span>
             </a>
           </div>
@@ -120,7 +121,7 @@ export const NewsDetailPage: React.FC = () => {
 
         {/* Tags */}
         <div className="pt-4 flex flex-wrap gap-2 items-center">
-          <span className="text-xs font-bold text-slate-400">Teglar:</span>
+          <span className="text-xs font-bold text-slate-400">{t('newsDetail.tags')}</span>
           {article.tags.map((tag) => (
             <span
               key={tag}
