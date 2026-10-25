@@ -2,10 +2,23 @@ export const translations = {
   uz: {
     // Nav
     'nav.home': 'Bosh Sahifa',
-    'nav.games': "O'yinlar Ensiklopediyasi",
+    'nav.games': "O'yinlar Wiki",
+    'nav.wiki': "O'yinlar Wiki",
     'nav.allNews': 'Barcha Yangiliklar',
     'nav.searchPlaceholder': "O'yin yangiliklari, maqola va sharhlarni qidiring...",
     'nav.searchMobile': 'Yangiliklardan qidiruv...',
+
+    // Wiki List Page
+    'wikiList.badge': "CRAFTING & RETSEPTLAR ENSIKLOPEDIYASI",
+    'wikiList.title': "O'yinlar Wiki — Fandom & Crafting Bazasi",
+    'wikiList.desc': "Fandom uslubidagi barcha resurslar, asbob-uskunalar, retseptlar, ingredientlar va xaritalar bazasi. Faqat hunarmandchilik (crafting) tizimiga ega o'yinlar jamlangan.",
+    'wikiList.searchPlaceholder': "Wiki o'yinlaridan qidirish (Raft, Rust, Minecraft)...",
+    'wikiList.craftBadge': "Crafting Bor",
+    'wikiList.openWiki': "Wikini Ochish",
+    'wikiList.empty': "Hech qanday crafting o'yini topilmadi",
+    'wikiList.noticeTitle': "Yangiliklar va Wiki bo'limlari ajratilgan",
+    'wikiList.noticeText': "Ushbu bo'limda faqat Crafting (yasash) va Retseptlar tizimiga ega o'yinlar mavjud. Boshqa barcha o'yinlarning reliz sanalari, treylerlari va xabarlari Yangiliklar bo'limida alohida yoritiladi.",
+    'wikiList.goToNews': "Barcha Yangiliklar",
 
     // Footer
     'footer.brandDesc': "O'zbekistondagi eng to'liq geymerlar ensiklopediyasi, retseptlar va o'yin yangiliklari portali.",
@@ -129,10 +142,23 @@ export const translations = {
   ru: {
     // Nav
     'nav.home': 'Главная',
-    'nav.games': 'Энциклопедия Игр',
+    'nav.games': 'Вики Игр',
+    'nav.wiki': 'Вики Игр',
     'nav.allNews': 'Все Новости',
     'nav.searchPlaceholder': 'Поиск новостей, статей и обзоров игр...',
     'nav.searchMobile': 'Поиск по новостям...',
+
+    // Wiki List Page
+    'wikiList.badge': 'БАЗА КРАФТА И РЕЦЕПТОВ',
+    'wikiList.title': 'Вики Игр — База Фандома и Крафта',
+    'wikiList.desc': 'База ресурсов, предметов, рецептов, ингредиентов и карт в стиле Fandom. Включает только игры с системой крафта.',
+    'wikiList.searchPlaceholder': 'Поиск по вики-играм (Raft, Rust, Minecraft)...',
+    'wikiList.craftBadge': 'Есть Крафт',
+    'wikiList.openWiki': 'Открыть Вики',
+    'wikiList.empty': 'Игры с системой крафта не найдены',
+    'wikiList.noticeTitle': 'Разделы Новости и Вики полностью разделены',
+    'wikiList.noticeText': 'В этом разделе собраны исключительно игры с системой создания предметов (крафта). Новости, трейлеры и релизы остальных игр находятся в разделе Новости.',
+    'wikiList.goToNews': 'Все Новости',
 
     // Footer
     'footer.brandDesc': 'Самая полная игровая энциклопедия, рецепты крафта и новостной портал в Узбекистане.',
@@ -257,9 +283,22 @@ export const translations = {
     // Nav
     'nav.home': 'Home',
     'nav.games': 'Games Wiki',
+    'nav.wiki': 'Games Wiki',
     'nav.allNews': 'All News',
     'nav.searchPlaceholder': 'Search gaming news, articles, and reviews...',
     'nav.searchMobile': 'Search news...',
+
+    // Wiki List Page
+    'wikiList.badge': 'CRAFTING & RECIPES ENCYCLOPEDIA',
+    'wikiList.title': 'Games Wiki — Fandom & Crafting Database',
+    'wikiList.desc': 'Fandom-style database of all resources, tools, recipes, ingredients, and maps. Exclusively includes games with crafting systems.',
+    'wikiList.searchPlaceholder': 'Search wiki games (Raft, Rust, Minecraft)...',
+    'wikiList.craftBadge': 'Crafting Enabled',
+    'wikiList.openWiki': 'Open Wiki',
+    'wikiList.empty': 'No crafting games found',
+    'wikiList.noticeTitle': 'News and Wiki sections are completely separated',
+    'wikiList.noticeText': 'This section contains only games with a Crafting and Recipe system. All release dates, trailers, and articles for other games are featured in the News section.',
+    'wikiList.goToNews': 'All News',
 
     // Footer
     'footer.brandDesc': 'The premier gaming encyclopedia, crafting recipes, and news portal in Uzbekistan.',

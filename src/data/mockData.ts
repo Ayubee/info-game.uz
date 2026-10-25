@@ -4,6 +4,7 @@ export const INITIAL_GAMES: Game[] = [
   {
     id: 'raft',
     name: 'Raft: The Final Chapter',
+    hasCrafting: true,
     tagline: {
       uz: "Cheksiz okeanda solingizni quring va omon qoling",
       ru: "Стройте свой плот и выживайте в бескрайнем океане",
@@ -145,6 +146,7 @@ export const INITIAL_GAMES: Game[] = [
   {
     id: 'cs2',
     name: 'Counter-Strike 2',
+    hasCrafting: false,
     tagline: {
       uz: "Dunyodagi eng mashhur taktik komandali otishma o'yini",
       ru: "Главный тактический шутер от первого лица в киберспорте",
@@ -210,6 +212,7 @@ export const INITIAL_GAMES: Game[] = [
   {
     id: 'rust',
     name: 'Rust',
+    hasCrafting: true,
     tagline: {
       uz: "Qattiq rejimdagi omon qolish va bazalarni reyd qilish",
       ru: "Беспощадное выживание и рейды баз",
@@ -236,6 +239,7 @@ export const INITIAL_GAMES: Game[] = [
   {
     id: 'minecraft',
     name: 'Minecraft',
+    hasCrafting: true,
     tagline: {
       uz: "Cheksiz bloklar olami, tasavvuringiz sarhadi yo'q",
       ru: "Бесконечный мир блоков и безграничного творчества",

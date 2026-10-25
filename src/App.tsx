@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { HomePage } from './pages/HomePage';
+import { WikiListPage } from './pages/WikiListPage';
 import { GameWikiPage } from './pages/GameWikiPage';
 import { NewsListPage } from './pages/NewsListPage';
 import { NewsDetailPage } from './pages/NewsDetailPage';
@@ -15,8 +16,14 @@ export const App: React.FC = () => {
       <main className="flex-1">
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/games" element={<Navigate to="/games/raft" replace />} />
+          
+          {/* Dedicated Games Wiki Section (Only games with Crafting) */}
+          <Route path="/wiki" element={<WikiListPage />} />
+          <Route path="/wiki/:gameId" element={<GameWikiPage />} />
+          <Route path="/games" element={<WikiListPage />} />
           <Route path="/games/:gameId" element={<GameWikiPage />} />
+
+          {/* Dedicated News Section */}
           <Route path="/news" element={<NewsListPage />} />
           <Route path="/news/:id" element={<NewsDetailPage />} />
           

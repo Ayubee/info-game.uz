@@ -25,7 +25,11 @@ export const Navbar: React.FC = () => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
-    navigate(`/games/${activeGame?.id || 'raft'}?search=${encodeURIComponent(searchQuery)}`);
+    if (location.pathname.startsWith('/wiki') || location.pathname.startsWith('/games')) {
+      navigate(`/wiki?search=${encodeURIComponent(searchQuery)}`);
+    } else {
+      navigate(`/news?search=${encodeURIComponent(searchQuery)}`);
+    }
   };
 
   const languages: { code: Language; label: string; flag: string }[] = [
@@ -79,16 +83,16 @@ export const Navbar: React.FC = () => {
               {t('nav.home')}
             </Link>
             <Link
-              to="/games"
-              className={`hover:text-[#00e5ff] transition-colors ${location.pathname.startsWith('/games') ? 'text-[#00e5ff] font-bold' : ''}`}
-            >
-              {t('nav.games')}
-            </Link>
-            <Link
               to="/news"
               className={`hover:text-[#00e5ff] transition-colors ${location.pathname.startsWith('/news') ? 'text-[#00e5ff] font-bold' : ''}`}
             >
               {t('nav.allNews')}
+            </Link>
+            <Link
+              to="/wiki"
+              className={`hover:text-[#00e5ff] transition-colors ${location.pathname.startsWith('/wiki') || location.pathname.startsWith('/games') ? 'text-[#00e5ff] font-bold' : ''}`}
+            >
+              {t('nav.wiki')}
             </Link>
           </nav>
 
@@ -159,18 +163,18 @@ export const Navbar: React.FC = () => {
               {t('nav.home')}
             </Link>
             <Link
-              to="/games"
-              onClick={() => setMobileMenuOpen(false)}
-              className="px-3 py-2 rounded-lg text-xs font-bold text-slate-200 hover:bg-white/5"
-            >
-              {t('nav.games')}
-            </Link>
-            <Link
               to="/news"
               onClick={() => setMobileMenuOpen(false)}
               className="px-3 py-2 rounded-lg text-xs font-bold text-[#00e5ff] hover:bg-white/5"
             >
               {t('nav.allNews')}
+            </Link>
+            <Link
+              to="/wiki"
+              onClick={() => setMobileMenuOpen(false)}
+              className="px-3 py-2 rounded-lg text-xs font-bold text-purple-400 hover:bg-white/5"
+            >
+              {t('nav.wiki')}
             </Link>
           </div>
         </div>

@@ -4,7 +4,7 @@ import { useApp } from '../context/AppContext';
 import { WikiItem, WikiCategory } from '../types';
 import { 
   Search, ExternalLink, Compass, Shield, Flame, Hammer, 
-  MapPin, CheckCircle, ChevronRight, Layers, Sparkles, Filter 
+  MapPin, CheckCircle, ChevronRight, Layers, Sparkles, Filter, Info 
 } from 'lucide-react';
 
 export const GameWikiPage: React.FC = () => {
@@ -64,6 +64,8 @@ export const GameWikiPage: React.FC = () => {
             <div className="flex items-center gap-2 text-xs text-slate-400 mb-1">
               <Link to="/" className="hover:text-white">{t('wiki.home')}</Link>
               <span>&gt;</span>
+              <Link to="/wiki" className="hover:text-purple-300 text-purple-400 font-semibold">{t('nav.wiki')}</Link>
+              <span>&gt;</span>
               <span className="text-[#00e5ff] font-semibold">{game.name}</span>
             </div>
             <h1 className="text-xl sm:text-2xl font-black text-white flex items-center gap-3">
@@ -71,6 +73,11 @@ export const GameWikiPage: React.FC = () => {
               <span className="text-xs bg-[#00e5ff]/20 text-[#00e5ff] border border-[#00e5ff]/40 px-2 py-0.5 rounded-full font-mono">
                 {game.items.length} {t('wiki.articlesCount')}
               </span>
+              {game.hasCrafting !== false && (
+                <span className="text-xs bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
+                  <Hammer className="w-3 h-3" /> Crafting
+                </span>
+              )}
             </h1>
           </div>
 
@@ -88,6 +95,32 @@ export const GameWikiPage: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Non-crafting notice if accessed directly */}
+      {game.hasCrafting === false && (
+        <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 pt-6">
+          <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <Info className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <h3 className="text-sm font-bold text-amber-300">
+                  Ushbu o'yinda Crafting (hunarmandchilik) tizimi mavjud emas
+                </h3>
+                <p className="text-xs text-slate-300 mt-1">
+                  "{game.name}" o'yini faqat yangiliklar, treylerlar va maqolalar uchun kiritilgan. Ushbu o'yinga oid postlarni Yangiliklar bo'limida kuzatishingiz mumkin.
+                </p>
+              </div>
+            </div>
+            <Link
+              to="/news"
+              className="bg-amber-400 text-black font-bold text-xs px-4 py-2 rounded-xl hover:bg-amber-300 flex items-center gap-1.5 flex-shrink-0"
+            >
+              <span>Yangiliklarni Ko'rish</span>
+              <ChevronRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* Main 3-Column Hybrid Layout */}
       <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 py-6 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6">

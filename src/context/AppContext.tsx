@@ -62,7 +62,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [games, setGames] = useState<Game[]>(() => {
     const saved = localStorage.getItem('info_game_games');
-    return saved ? JSON.parse(saved) : INITIAL_GAMES;
+    if (!saved) return INITIAL_GAMES;
+    try {
+      const parsed = JSON.parse(saved);
+      return parsed.map((g: Game) => {
+        if (g.hasCrafting === undefined) {
+          if (g.id === 'cs2') return { ...g, hasCrafting: false };
+          return { ...g, hasCrafting: (g.items && g.items.some(i => !!i.recipe)) || g.id === 'raft' || g.id === 'rust' || g.id === 'minecraft' };
+        }
+        return g;
+      });
+    } catch {
+      return INITIAL_GAMES;
+    }
   });
 
   const [news, setNews] = useState<NewsArticle[]>(() => {
