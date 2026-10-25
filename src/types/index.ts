@@ -48,6 +48,7 @@ export interface Game {
   releaseDateExact?: string; // e.g. "Kuz 2025" or exact date
   isUpcoming?: boolean; // Chiqishi kutilayotgan o'yin
   overviewArticle?: LocalizedString; // Ensiklopediya sahifasida chiqadigan umumiy katta maqola/sharh
+  hasCrafting?: boolean; // Ushbu o'yinda hunarmandchilik / crafting tizimi mavjudligi
 }
 
 export interface NewsArticle {

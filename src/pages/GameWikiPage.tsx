@@ -249,17 +249,19 @@ export const GameWikiPage: React.FC = () => {
                     <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#00e5ff]" />
                   )}
                 </button>
-                <button
-                  onClick={() => setActiveTab('recipe')}
-                  className={`pb-2.5 transition-colors relative ${
-                    activeTab === 'recipe' ? 'text-[#00e5ff]' : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  {t('wiki.tabRecipe')}
-                  {activeTab === 'recipe' && (
-                    <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#00e5ff]" />
-                  )}
-                </button>
+                {game.hasCrafting !== false && (
+                  <button
+                    onClick={() => setActiveTab('recipe')}
+                    className={`pb-2.5 transition-colors relative ${
+                      activeTab === 'recipe' ? 'text-[#00e5ff]' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    {t('wiki.tabRecipe')}
+                    {activeTab === 'recipe' && (
+                      <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#00e5ff]" />
+                    )}
+                  </button>
+                )}
                 <button
                   onClick={() => setActiveTab('tips')}
                   className={`pb-2.5 transition-colors relative ${

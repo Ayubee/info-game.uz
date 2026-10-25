@@ -3,9 +3,10 @@ import { useApp } from '../context/AppContext';
 import { 
   Shield, PlusCircle, Gamepad2, Newspaper, Database, CheckCircle, 
   ExternalLink, Image as ImageIcon, Video, Edit3, Trash2, X, Sparkles, 
-  DownloadCloud, RefreshCw, Upload, FileImage, CloudLightning, Flame, Globe
+  DownloadCloud, RefreshCw, Upload, FileImage, CloudLightning, Flame, Globe,
+  Layers, Hammer, Plus, Minus, Tag, Wrench, Clock, MapPin, Lightbulb, ChevronRight
 } from 'lucide-react';
-import { Game, NewsArticle, WikiItem } from '../types';
+import { Game, NewsArticle, WikiItem, WikiCategory } from '../types';
 import { formatEmbedUrl } from '../utils/video';
 
 const processImageFile = (file: File): Promise<string> => {
@@ -58,6 +59,7 @@ export const AdminPage: React.FC = () => {
     addGame, updateGame, deleteGame,
     addNews, updateNews, deleteNews,
     addWikiItem, updateWikiItem, deleteWikiItem,
+    addWikiCategory, updateWikiCategory, deleteWikiCategory,
     importGameFromSource,
     isFirebaseConnected, setFirebaseConfig
   } = useApp();
@@ -77,6 +79,40 @@ export const AdminPage: React.FC = () => {
   const [editingGame, setEditingGame] = useState<Game | null>(null);
   const [editingWikiItem, setEditingWikiItem] = useState<{ gameId: string; item: WikiItem } | null>(null);
 
+  // Category & Items Management Modals
+  const [managingCategoriesGameId, setManagingCategoriesGameId] = useState<string | null>(null);
+  const [managingItemsGameId, setManagingItemsGameId] = useState<string | null>(null);
+
+  // Form State: Category Management
+  const [newCatNameUz, setNewCatNameUz] = useState('');
+  const [newCatNameRu, setNewCatNameRu] = useState('');
+  const [newCatNameEn, setNewCatNameEn] = useState('');
+  const [newCatId, setNewCatId] = useState('');
+  const [newCatIcon, setNewCatIcon] = useState('📦');
+  const [editingCategory, setEditingCategory] = useState<WikiCategory | null>(null);
+
+  // Form State: Fandom Wiki Item & Recipe Management
+  const [itemCatId, setItemCatId] = useState('');
+  const [itemNameUz, setItemNameUz] = useState('');
+  const [itemNameRu, setItemNameRu] = useState('');
+  const [itemNameEn, setItemNameEn] = useState('');
+  const [itemIcon, setItemIcon] = useState('🔨');
+  const [itemTier, setItemTier] = useState('Tier 1');
+  const [itemRarity, setItemRarity] = useState<'common' | 'rare' | 'epic' | 'legendary'>('common');
+  const [itemDescUz, setItemDescUz] = useState('');
+  const [itemDescRu, setItemDescRu] = useState('');
+  const [itemDescEn, setItemDescEn] = useState('');
+  const [itemStation, setItemStation] = useState('Dastgoh (Work Bench)');
+  const [itemCraftTime, setItemCraftTime] = useState('Tezkor');
+  const [itemLocation, setItemLocation] = useState('');
+  const [itemTipsUz, setItemTipsUz] = useState('');
+  const [itemIngredients, setItemIngredients] = useState<Array<{ item: string; count: number }>>([
+    { item: 'Taxta (Plank)', count: 2 }
+  ]);
+  const [itemAttributes, setItemAttributes] = useState<Array<{ key: string; value: string }>>([
+    { key: 'Chidamlilik', value: '100' }
+  ]);
+
   // Form State: Add Game
   const [gameName, setGameName] = useState('');
   const [gameYear, setGameYear] = useState('2025');
@@ -88,6 +124,7 @@ export const AdminPage: React.FC = () => {
   const [gameDescUz, setGameDescUz] = useState('');
   const [gameReleaseDateExact, setGameReleaseDateExact] = useState('Kuz 2025');
   const [gameIsUpcoming, setGameIsUpcoming] = useState(false);
+  const [gameHasCrafting, setGameHasCrafting] = useState(true);
   const [gameOverviewArticleUz, setGameOverviewArticleUz] = useState('');
 
   // Form State: Add News (Multi-language and Tag management)
@@ -170,6 +207,7 @@ export const AdminPage: React.FC = () => {
       description: { uz: gameDescUz || '', ru: '', en: '' },
       releaseDateExact: gameReleaseDateExact.trim() || undefined,
       isUpcoming: gameIsUpcoming,
+      hasCrafting: gameHasCrafting,
       overviewArticle: gameOverviewArticleUz.trim() ? { uz: gameOverviewArticleUz, ru: gameOverviewArticleUz, en: gameOverviewArticleUz } : undefined,
     });
 
@@ -180,6 +218,139 @@ export const AdminPage: React.FC = () => {
     setGameSourceUrl('');
     setGameOverviewArticleUz('');
     showNotification("Yangi o'yin muvaffaqiyatli qo'shildi!");
+  };
+
+  const handleAddIngredientRow = () => {
+    setItemIngredients([...itemIngredients, { item: '', count: 1 }]);
+  };
+
+  const handleRemoveIngredientRow = (index: number) => {
+    setItemIngredients(itemIngredients.filter((_, i) => i !== index));
+  };
+
+  const handleUpdateIngredientRow = (index: number, field: 'item' | 'count', val: string | number) => {
+    const updated = [...itemIngredients];
+    if (field === 'item') {
+      updated[index].item = String(val);
+    } else {
+      updated[index].count = Number(val) || 1;
+    }
+    setItemIngredients(updated);
+  };
+
+  const handleAddAttributeRow = () => {
+    setItemAttributes([...itemAttributes, { key: '', value: '' }]);
+  };
+
+  const handleRemoveAttributeRow = (index: number) => {
+    setItemAttributes(itemAttributes.filter((_, i) => i !== index));
+  };
+
+  const handleUpdateAttributeRow = (index: number, field: 'key' | 'value', val: string) => {
+    const updated = [...itemAttributes];
+    updated[index][field] = val;
+    setItemAttributes(updated);
+  };
+
+  const handleCreateFandomItem = (e: React.FormEvent, gameId: string) => {
+    e.preventDefault();
+    if (!itemNameUz.trim() && !itemNameRu.trim() && !itemNameEn.trim()) {
+      alert("Buyum nomini kiriting!");
+      return;
+    }
+
+    const defaultName = itemNameUz || itemNameRu || itemNameEn;
+    const defaultDesc = itemDescUz || itemDescRu || itemDescEn;
+
+    const validIngredients = itemIngredients.filter(ing => ing.item.trim());
+    const validAttributes: Record<string, string | number> = {};
+    itemAttributes.forEach(attr => {
+      if (attr.key.trim() && attr.value.trim()) {
+        validAttributes[attr.key.trim()] = attr.value.trim();
+      }
+    });
+
+    const targetGame = games.find(g => g.id === gameId);
+    const categoryToUse = itemCatId || (targetGame?.categories?.[0]?.id || 'general');
+
+    const newItem: WikiItem = {
+      id: `item-${Date.now()}`,
+      name: {
+        uz: itemNameUz.trim() || defaultName,
+        ru: itemNameRu.trim() || defaultName,
+        en: itemNameEn.trim() || defaultName,
+      },
+      category: categoryToUse,
+      tier: itemTier.trim() || undefined,
+      rarity: itemRarity,
+      icon: itemIcon.trim() || '📦',
+      description: {
+        uz: itemDescUz.trim() || defaultDesc,
+        ru: itemDescRu.trim() || defaultDesc,
+        en: itemDescEn.trim() || defaultDesc,
+      },
+      recipe: validIngredients.length > 0 ? {
+        ingredients: validIngredients,
+        station: itemStation.trim() || undefined,
+        craftTime: itemCraftTime.trim() || undefined,
+      } : undefined,
+      attributes: Object.keys(validAttributes).length > 0 ? validAttributes : undefined,
+      tips: (itemTipsUz.trim()) ? {
+        uz: itemTipsUz.trim(),
+        ru: itemTipsUz.trim(),
+        en: itemTipsUz.trim()
+      } : undefined,
+      location: itemLocation.trim() || undefined,
+    };
+
+    addWikiItem(gameId, newItem);
+    setItemNameUz('');
+    setItemNameRu('');
+    setItemNameEn('');
+    setItemDescUz('');
+    setItemDescRu('');
+    setItemDescEn('');
+    setItemLocation('');
+    setItemTipsUz('');
+    setItemIngredients([{ item: 'Taxta (Plank)', count: 2 }]);
+    setItemAttributes([{ key: 'Chidamlilik', value: '100' }]);
+    showNotification("Fandom Wiki buyumi va retsepti saqlandi!");
+  };
+
+  const handleCreateCategory = (e: React.FormEvent, gameId: string) => {
+    e.preventDefault();
+    if (!newCatNameUz.trim() && !newCatNameRu.trim() && !newCatNameEn.trim()) {
+      alert("Kategoriya nomini kiriting!");
+      return;
+    }
+    const defaultName = newCatNameUz || newCatNameRu || newCatNameEn;
+    const generatedId = newCatId.trim().toLowerCase().replace(/\s+/g, '-') || `cat-${Date.now()}`;
+
+    const newCat: WikiCategory = {
+      id: generatedId,
+      name: {
+        uz: newCatNameUz.trim() || defaultName,
+        ru: newCatNameRu.trim() || defaultName,
+        en: newCatNameEn.trim() || defaultName,
+      },
+      icon: newCatIcon.trim() || '📁',
+    };
+
+    addWikiCategory(gameId, newCat);
+    setNewCatNameUz('');
+    setNewCatNameRu('');
+    setNewCatNameEn('');
+    setNewCatId('');
+    setNewCatIcon('📦');
+    showNotification("Yangi kategoriya qo'shildi!");
+  };
+
+  const handleSaveCategoryEdit = (e: React.FormEvent, gameId: string) => {
+    e.preventDefault();
+    if (!editingCategory) return;
+    updateWikiCategory(gameId, editingCategory.id, editingCategory);
+    setEditingCategory(null);
+    showNotification("Kategoriya muvaffaqiyatli o'zgartirildi!");
   };
 
   const handleCreateNews = (e: React.FormEvent) => {
@@ -1149,6 +1320,30 @@ export const AdminPage: React.FC = () => {
                 />
               </div>
 
+              {/* Crafting System Checkbox / Question */}
+              <div className="bg-[#070e17] border border-[#00e5ff]/30 rounded-xl p-4 flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  id="gameHasCrafting"
+                  checked={gameHasCrafting}
+                  onChange={(e) => setGameHasCrafting(e.target.checked)}
+                  className="mt-1 w-4 h-4 rounded text-[#00e5ff] accent-[#00e5ff] cursor-pointer"
+                />
+                <label htmlFor="gameHasCrafting" className="cursor-pointer">
+                  <span className="text-xs font-bold text-white flex items-center gap-2">
+                    <span>🔨 Ushbu o'yinda Crafting / Retseptlar / Buyumlar tizimi bormi?</span>
+                    {gameHasCrafting ? (
+                      <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] px-2 py-0.5 rounded font-bold">HA, MAVJUD</span>
+                    ) : (
+                      <span className="bg-slate-700/50 text-slate-400 border border-white/10 text-[10px] px-2 py-0.5 rounded font-bold">YO'Q</span>
+                    )}
+                  </span>
+                  <span className="text-[11px] text-slate-400 block mt-1 leading-relaxed">
+                    Agar belgilansa, o'yin uchun avtomatik Crafting & Retseptlar bo'limi ochiladi va siz Fandom (Raft, Rust, Minecraft kabi) buyumlari, ingredientlari va dastgohlarini kiritishingiz mumkin bo'ladi.
+                  </span>
+                </label>
+              </div>
+
               <button
                 type="submit"
                 className="bg-[#00e5ff] text-[#070e17] font-black text-xs px-6 py-2.5 rounded-xl hover:bg-[#38bdf8] transition-colors"
@@ -1161,7 +1356,7 @@ export const AdminPage: React.FC = () => {
             <div className="bg-[#0b1424] border border-white/10 rounded-2xl p-6 space-y-4">
               <h3 className="text-base font-bold text-white flex items-center justify-between">
                 <span>Mavjud O'yinlar Ensiklopediyasi ({games.length})</span>
-                <span className="text-xs text-slate-400 font-normal">Tahrirlash yoki o'chirish</span>
+                <span className="text-xs text-slate-400 font-normal">Kategoriyalar, buyumlar, craft va tahrirlash</span>
               </h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1172,34 +1367,73 @@ export const AdminPage: React.FC = () => {
                   >
                     <div className="flex items-center gap-3">
                       <img src={game.coverImage} alt="" className="w-16 h-16 rounded-xl object-cover flex-shrink-0" />
-                      <div>
-                        <h4 className="text-sm font-bold text-white">{game.name}</h4>
-                        <div className="text-[10px] text-slate-400">{game.releaseDateExact || game.releaseYear} • {game.developer}</div>
-                        <div className="text-[10px] text-[#00e5ff] mt-0.5">Ensiklopediya sharhi mavjud</div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h4 className="text-sm font-bold text-white truncate">{game.name}</h4>
+                          {game.hasCrafting !== false ? (
+                            <span className="text-[9px] bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-bold flex items-center gap-1">
+                              <Hammer className="w-2.5 h-2.5" /> Crafting Bor
+                            </span>
+                          ) : (
+                            <span className="text-[9px] bg-slate-800 text-slate-400 border border-white/10 px-1.5 py-0.5 rounded font-bold">
+                              Craftingsiz
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-[10px] text-slate-400 mt-0.5">{game.releaseDateExact || game.releaseYear} • {game.developer}</div>
+                        <div className="text-[10px] text-[#00e5ff] mt-0.5 flex items-center gap-2">
+                          <span>🏷️ {game.categories?.length || 0} kategoriya</span>
+                          <span>•</span>
+                          <span>📦 {game.items?.length || 0} buyum</span>
+                        </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-end gap-2 pt-2 border-t border-white/5">
-                      <button
-                        onClick={() => setEditingGame(game)}
-                        className="bg-[#00e5ff]/10 hover:bg-[#00e5ff]/20 text-[#00e5ff] border border-[#00e5ff]/30 text-xs px-3 py-1.5 rounded-lg flex items-center gap-1 font-bold"
-                      >
-                        <Edit3 className="w-3.5 h-3.5" />
-                        <span>O'zgartirish</span>
-                      </button>
+                    <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-white/5">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <button
+                          type="button"
+                          onClick={() => setManagingCategoriesGameId(game.id)}
+                          className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1 font-bold transition-all"
+                          title="Kategoriyalarni tahrirlash, o'chirish yoki yangi kategoriya qo'shish"
+                        >
+                          <Tag className="w-3.5 h-3.5" />
+                          <span>Kategoriyalar ({game.categories?.length || 0})</span>
+                        </button>
 
-                      <button
-                        onClick={() => {
-                          if (confirm(`"${game.name}" o'yinini o'chirishga ishonchingiz komilmi?`)) {
-                            deleteGame(game.id);
-                            showNotification("O'yin o'chirildi.");
-                          }
-                        }}
-                        className="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 text-xs px-3 py-1.5 rounded-lg flex items-center gap-1 font-bold"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        <span>O'chirish</span>
-                      </button>
+                        <button
+                          type="button"
+                          onClick={() => setManagingItemsGameId(game.id)}
+                          className="bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 border border-purple-500/30 text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1 font-bold transition-all"
+                          title="Fandom Wiki buyumlari, retseptlar va ingredientlarni boshqarish"
+                        >
+                          <Hammer className="w-3.5 h-3.5" />
+                          <span>Buyumlar & Craft ({game.items?.length || 0})</span>
+                        </button>
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => setEditingGame(game)}
+                          className="bg-[#00e5ff]/10 hover:bg-[#00e5ff]/20 text-[#00e5ff] border border-[#00e5ff]/30 text-xs px-3 py-1.5 rounded-lg flex items-center gap-1 font-bold"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                          <span>O'zgartirish</span>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            if (confirm(`"${game.name}" o'yinini o'chirishga ishonchingiz komilmi?`)) {
+                              deleteGame(game.id);
+                              showNotification("O'yin o'chirildi.");
+                            }
+                          }}
+                          className="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 text-xs px-3 py-1.5 rounded-lg flex items-center gap-1 font-bold"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>O'chirish</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -1442,6 +1676,20 @@ export const AdminPage: React.FC = () => {
                   />
                 </div>
 
+                <div className="bg-[#070e17] border border-[#00e5ff]/30 rounded-xl p-3 flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    id="editGameHasCrafting"
+                    checked={editingGame.hasCrafting !== false}
+                    onChange={(e) => setEditingGame({ ...editingGame, hasCrafting: e.target.checked })}
+                    className="w-4 h-4 text-[#00e5ff] accent-[#00e5ff] cursor-pointer"
+                  />
+                  <label htmlFor="editGameHasCrafting" className="text-xs font-bold text-white cursor-pointer flex items-center gap-2">
+                    <Hammer className="w-3.5 h-3.5 text-[#00e5ff]" />
+                    <span>Ushbu o'yinda Crafting / Retseptlar tizimi yoqilgan ({editingGame.hasCrafting !== false ? "HA" : "YO'Q"})</span>
+                  </label>
+                </div>
+
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-[#00e5ff] flex items-center gap-1.5">
                     <Upload className="w-4 h-4" />
@@ -1576,6 +1824,697 @@ export const AdminPage: React.FC = () => {
             </div>
           </div>
         )}
+
+        {/* ========================================================= */}
+        {/* MODAL: CATEGORY MANAGEMENT MODAL                         */}
+        {/* ========================================================= */}
+        {managingCategoriesGameId && (() => {
+          const catGame = games.find(g => g.id === managingCategoriesGameId);
+          if (!catGame) return null;
+
+          return (
+            <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="bg-[#0b1424] border border-amber-500/40 rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6 space-y-6 shadow-2xl">
+                <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                      <Tag className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                        <span>"{catGame.name}" Kategoriyalari</span>
+                        <span className="text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full font-bold">
+                          {catGame.categories?.length || 0} ta
+                        </span>
+                      </h3>
+                      <p className="text-xs text-slate-400">
+                        O'yin kategoriyalarini o'zgartiring, yangisini qo'shing yoki keraksizlarini olib tashlang.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setManagingCategoriesGameId(null);
+                      setEditingCategory(null);
+                    }}
+                    className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/5"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Edit Category Form (Inline) */}
+                {editingCategory && (
+                  <form
+                    onSubmit={(e) => handleSaveCategoryEdit(e, catGame.id)}
+                    className="bg-[#070e17] border border-amber-500/40 rounded-xl p-4 space-y-3"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-amber-400 flex items-center gap-1.5">
+                        <Edit3 className="w-4 h-4" />
+                        <span>Kategoriyani tahrirlash: {editingCategory.name.uz}</span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setEditingCategory(null)}
+                        className="text-xs text-slate-400 hover:text-white"
+                      >
+                        Bekor qilish
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                      <input
+                        type="text"
+                        required
+                        placeholder="O'zbekcha nomi *"
+                        value={editingCategory.name.uz}
+                        onChange={(e) => setEditingCategory({
+                          ...editingCategory,
+                          name: { ...editingCategory.name, uz: e.target.value }
+                        })}
+                        className="bg-[#0b1424] border border-white/10 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-amber-400"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Ruscha nomi"
+                        value={editingCategory.name.ru || ''}
+                        onChange={(e) => setEditingCategory({
+                          ...editingCategory,
+                          name: { ...editingCategory.name, ru: e.target.value }
+                        })}
+                        className="bg-[#0b1424] border border-white/10 rounded-lg px-3 py-2 text-xs text-white outline-none"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Inglizcha nomi"
+                        value={editingCategory.name.en || ''}
+                        onChange={(e) => setEditingCategory({
+                          ...editingCategory,
+                          name: { ...editingCategory.name, en: e.target.value }
+                        })}
+                        className="bg-[#0b1424] border border-white/10 rounded-lg px-3 py-2 text-xs text-white outline-none"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Ikonka (emoji)"
+                        value={editingCategory.icon || ''}
+                        onChange={(e) => setEditingCategory({
+                          ...editingCategory,
+                          icon: e.target.value
+                        })}
+                        className="bg-[#0b1424] border border-white/10 rounded-lg px-3 py-2 text-xs text-white text-center outline-none"
+                      />
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <button
+                        type="submit"
+                        className="bg-amber-400 hover:bg-amber-300 text-black font-black text-xs px-4 py-2 rounded-lg"
+                      >
+                        O'zgarishni Saqlash
+                      </button>
+                    </div>
+                  </form>
+                )}
+
+                {/* Existing Categories List */}
+                <div className="space-y-3">
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wider text-slate-300">
+                    Mavjud Kategoriyalar ({catGame.categories?.length || 0})
+                  </h4>
+
+                  {catGame.categories && catGame.categories.length > 0 ? (
+                    <div className="grid grid-cols-1 gap-2.5">
+                      {catGame.categories.map((cat) => {
+                        const count = catGame.items?.filter((it) => it.category === cat.id).length || 0;
+                        return (
+                          <div
+                            key={cat.id}
+                            className="bg-[#070e17] border border-white/10 rounded-xl p-3.5 flex items-center justify-between gap-3 hover:border-white/20 transition-all"
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="text-2xl w-10 h-10 flex items-center justify-center bg-white/5 rounded-lg border border-white/10">
+                                {cat.icon || '📦'}
+                              </span>
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-bold text-white">{cat.name.uz}</span>
+                                  <span className="text-[10px] font-mono text-slate-400 bg-black/50 px-2 py-0.5 rounded border border-white/5">
+                                    id: {cat.id}
+                                  </span>
+                                </div>
+                                <div className="text-[11px] text-slate-400 mt-0.5 flex items-center gap-2 flex-wrap">
+                                  <span>🇷🇺 {cat.name.ru || '-'}</span>
+                                  <span>•</span>
+                                  <span>🇬🇧 {cat.name.en || '-'}</span>
+                                  <span>•</span>
+                                  <span className="text-[#00e5ff] font-semibold">{count} ta buyum biriktirilgan</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => setEditingCategory(cat)}
+                                className="bg-[#00e5ff]/10 hover:bg-[#00e5ff]/20 text-[#00e5ff] border border-[#00e5ff]/30 text-xs px-3 py-1.5 rounded-lg flex items-center gap-1 font-bold"
+                              >
+                                <Edit3 className="w-3.5 h-3.5" />
+                                <span>Tahrirlash</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (confirm(`"${cat.name.uz}" kategoriyasini olib tashlashga ishonchingiz komilmi?`)) {
+                                    deleteWikiCategory(catGame.id, cat.id);
+                                    showNotification("Kategoriya olib tashlandi.");
+                                  }
+                                }}
+                                className="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 text-xs px-3 py-1.5 rounded-lg flex items-center gap-1 font-bold"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                <span>Olib tashlash</span>
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-center py-6 text-slate-400 text-xs bg-[#070e17] rounded-xl border border-dashed border-white/10">
+                      Ushbu o'yinda hozircha kategoriyalar yo'q. Quyidagi shakldan foydalanib yangi kategoriya qo'shing.
+                    </div>
+                  )}
+                </div>
+
+                {/* Add Category Form */}
+                <form
+                  onSubmit={(e) => handleCreateCategory(e, catGame.id)}
+                  className="bg-[#070e17] border border-[#00e5ff]/30 rounded-xl p-4 space-y-4"
+                >
+                  <h4 className="text-xs font-bold text-white flex items-center gap-2">
+                    <PlusCircle className="w-4 h-4 text-[#00e5ff]" />
+                    <span>Yangi Kategoriya Qo'shish</span>
+                  </h4>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-300 block mb-1">🇺🇿 Nomi (O'zbekcha) *</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Masalan: Qurollar, Resurslar, Kema..."
+                        value={newCatNameUz}
+                        onChange={(e) => setNewCatNameUz(e.target.value)}
+                        className="w-full bg-[#0b1424] border border-white/10 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-[#00e5ff]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-300 block mb-1">🇷🇺 Nomi (Ruscha)</label>
+                      <input
+                        type="text"
+                        placeholder="Оружие, Ресурсы..."
+                        value={newCatNameRu}
+                        onChange={(e) => setNewCatNameRu(e.target.value)}
+                        className="w-full bg-[#0b1424] border border-white/10 rounded-lg px-3 py-2 text-xs text-white outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-300 block mb-1">🇬🇧 Nomi (Inglizcha)</label>
+                      <input
+                        type="text"
+                        placeholder="Weapons, Resources..."
+                        value={newCatNameEn}
+                        onChange={(e) => setNewCatNameEn(e.target.value)}
+                        className="w-full bg-[#0b1424] border border-white/10 rounded-lg px-3 py-2 text-xs text-white outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-300 block mb-1">Ikonka (Emoji)</label>
+                      <input
+                        type="text"
+                        placeholder="⚔️, 🪵, 🍲, 💎, 🧭..."
+                        value={newCatIcon}
+                        onChange={(e) => setNewCatIcon(e.target.value)}
+                        className="w-full bg-[#0b1424] border border-white/10 rounded-lg px-3 py-2 text-xs text-white outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-300 block mb-1">ID (Slug, ixtiyoriy)</label>
+                      <input
+                        type="text"
+                        placeholder="weapons, resources, food..."
+                        value={newCatId}
+                        onChange={(e) => setNewCatId(e.target.value)}
+                        className="w-full bg-[#0b1424] border border-white/10 rounded-lg px-3 py-2 text-xs text-white outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end pt-2">
+                    <button
+                      type="submit"
+                      className="bg-[#00e5ff] text-[#070e17] font-black text-xs px-5 py-2 rounded-lg hover:bg-[#38bdf8] flex items-center gap-1.5 transition-all"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Kategoriyani Qo'shish</span>
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* ========================================================= */}
+        {/* MODAL: FANDOM ITEMS & CRAFTING RECIPES MANAGEMENT        */}
+        {/* ========================================================= */}
+        {managingItemsGameId && (() => {
+          const itemGame = games.find(g => g.id === managingItemsGameId);
+          if (!itemGame) return null;
+
+          return (
+            <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="bg-[#0b1424] border border-purple-500/40 rounded-2xl w-full max-w-4xl max-h-[92vh] overflow-y-auto p-6 space-y-6 shadow-2xl">
+                
+                {/* Header */}
+                <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400">
+                      <Hammer className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                        <span>"{itemGame.name}" — Fandom Wiki Buyumlari & Craft</span>
+                        <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full font-bold">
+                          {itemGame.items?.length || 0} ta buyum
+                        </span>
+                      </h3>
+                      <p className="text-xs text-slate-400">
+                        {itemGame.hasCrafting !== false 
+                          ? "Raft Fandom kabi buyumlar, retseptlar, ingredientlar, dastgoh va xususiyatlar qo'shish tizimi."
+                          : "Ushbu o'yinda umumiy buyumlar va ensiklopediya elementlarini kiritishingiz mumkin."}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setManagingItemsGameId(null)}
+                    className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/5"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Crafting System Status Banner */}
+                <div className={`p-3 rounded-xl border flex items-center justify-between gap-3 text-xs ${
+                  itemGame.hasCrafting !== false 
+                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+                    : 'bg-slate-800/60 border-white/10 text-slate-300'
+                }`}>
+                  <div className="flex items-center gap-2">
+                    <Hammer className="w-4 h-4 flex-shrink-0" />
+                    <span>
+                      {itemGame.hasCrafting !== false 
+                        ? "Crafting va Retseptlar bo'limi yoqilgan! Quyida ingredientlar va dastgohlarni to'liq kiritishingiz mumkin."
+                        : "Crafting tizimi o'chirilgan. (Agar o'yinda craft bo'lsa, 'O'zgartirish' bo'limida yoqishingiz mumkin)."}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Form to Add New Fandom Item / Recipe */}
+                <form
+                  onSubmit={(e) => handleCreateFandomItem(e, itemGame.id)}
+                  className="bg-[#070e17] border border-purple-500/30 rounded-2xl p-5 space-y-5"
+                >
+                  <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                    <PlusCircle className="w-4 h-4 text-purple-400" />
+                    <span>Yangi Buyum / Craft Retsepti Kiritish (Raft Fandom uslubida)</span>
+                  </h4>
+
+                  {/* Category, Tier, Rarity, Icon */}
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                    <div>
+                      <label className="text-xs font-bold text-slate-300 block mb-1">Kategoriya *</label>
+                      <select
+                        value={itemCatId}
+                        onChange={(e) => setItemCatId(e.target.value)}
+                        className="w-full bg-[#0b1424] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-purple-400"
+                      >
+                        {itemGame.categories && itemGame.categories.length > 0 ? (
+                          itemGame.categories.map((c) => (
+                            <option key={c.id} value={c.id}>{c.icon || '📁'} {c.name.uz} ({c.id})</option>
+                          ))
+                        ) : (
+                          <option value="general">Umumiy (general)</option>
+                        )}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold text-slate-300 block mb-1">Tier / Daraja</label>
+                      <input
+                        type="text"
+                        placeholder="Tier 1, Tier 2, Early Game..."
+                        value={itemTier}
+                        onChange={(e) => setItemTier(e.target.value)}
+                        className="w-full bg-[#0b1424] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold text-slate-300 block mb-1">Noyoblik (Rarity)</label>
+                      <select
+                        value={itemRarity}
+                        onChange={(e) => setItemRarity(e.target.value as any)}
+                        className="w-full bg-[#0b1424] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none"
+                      >
+                        <option value="common">Oddiy (Common)</option>
+                        <option value="rare">Noyob (Rare)</option>
+                        <option value="epic">Epik (Epic)</option>
+                        <option value="legendary">Afsonaviy (Legendary)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold text-slate-300 block mb-1">Ikonka (Emoji / Rasm)</label>
+                      <input
+                        type="text"
+                        placeholder="Masalan: 🪓, 🎣, ⚙️, 🥩"
+                        value={itemIcon}
+                        onChange={(e) => setItemIcon(e.target.value)}
+                        className="w-full bg-[#0b1424] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none text-center"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Multi-language Item Name */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="text-xs font-bold text-slate-300 block mb-1">🇺🇿 Nomi (O'zbekcha) *</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Plastik Qarmaq (Plastic Hook)..."
+                        value={itemNameUz}
+                        onChange={(e) => setItemNameUz(e.target.value)}
+                        className="w-full bg-[#0b1424] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-purple-400"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold text-slate-300 block mb-1">🇷🇺 Nomi (Ruscha)</label>
+                      <input
+                        type="text"
+                        placeholder="Пластиковый крюк..."
+                        value={itemNameRu}
+                        onChange={(e) => setItemNameRu(e.target.value)}
+                        className="w-full bg-[#0b1424] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold text-slate-300 block mb-1">🇬🇧 Nomi (Inglizcha)</label>
+                      <input
+                        type="text"
+                        placeholder="Plastic Hook..."
+                        value={itemNameEn}
+                        onChange={(e) => setItemNameEn(e.target.value)}
+                        className="w-full bg-[#0b1424] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Descriptions */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="text-xs font-bold text-slate-300 block mb-1">🇺🇿 Tavsif (O'zbekcha)</label>
+                      <textarea
+                        rows={2}
+                        placeholder="Ushbu buyum nima uchun ishlatiladi..."
+                        value={itemDescUz}
+                        onChange={(e) => setItemDescUz(e.target.value)}
+                        className="w-full bg-[#0b1424] border border-white/10 rounded-xl p-2.5 text-xs text-white outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold text-slate-300 block mb-1">🇷🇺 Tavsif (Ruscha)</label>
+                      <textarea
+                        rows={2}
+                        placeholder="Описание предмета..."
+                        value={itemDescRu}
+                        onChange={(e) => setItemDescRu(e.target.value)}
+                        className="w-full bg-[#0b1424] border border-white/10 rounded-xl p-2.5 text-xs text-white outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold text-slate-300 block mb-1">🇬🇧 Tavsif (Inglizcha)</label>
+                      <textarea
+                        rows={2}
+                        placeholder="Item description..."
+                        value={itemDescEn}
+                        onChange={(e) => setItemDescEn(e.target.value)}
+                        className="w-full bg-[#0b1424] border border-white/10 rounded-xl p-2.5 text-xs text-white outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Crafting Recipe & Ingredients Section */}
+                  <div className="bg-[#0b1424] border border-white/10 rounded-xl p-4 space-y-4">
+                    <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                      <span className="text-xs font-bold text-[#00e5ff] flex items-center gap-1.5">
+                        <Hammer className="w-4 h-4" />
+                        <span>Crafting Retsepti & Ingredientlar</span>
+                      </span>
+                      <span className="text-[11px] text-slate-400">Raft Fandom kabi ko'p ingredientli retsept</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-300 block mb-1">Dastgoh / Stanok (Station)</label>
+                        <input
+                          type="text"
+                          placeholder="Dastgoh (Work Bench), Oddiy Gril, Eritish pechi, Qo'lda..."
+                          value={itemStation}
+                          onChange={(e) => setItemStation(e.target.value)}
+                          className="w-full bg-[#070e17] border border-white/10 rounded-lg px-3 py-2 text-xs text-white outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-300 block mb-1">Tayyorlanish Vaqti (Craft Time)</label>
+                        <input
+                          type="text"
+                          placeholder="Tezkor, 5 soniya, 10 soniya..."
+                          value={itemCraftTime}
+                          onChange={(e) => setItemCraftTime(e.target.value)}
+                          className="w-full bg-[#070e17] border border-white/10 rounded-lg px-3 py-2 text-xs text-white outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Dynamic Ingredients List */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[11px] font-bold text-slate-300">Retseptdagi Ingredientlar</label>
+                        <button
+                          type="button"
+                          onClick={handleAddIngredientRow}
+                          className="text-xs text-[#00e5ff] hover:underline flex items-center gap-1 font-bold"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>+ Ingredient qo'shish</span>
+                        </button>
+                      </div>
+
+                      {itemIngredients.map((ing, idx) => (
+                        <div key={idx} className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            placeholder="Ingredient nomi (masalan: Taxta / Plank, Plastik)"
+                            value={ing.item}
+                            onChange={(e) => handleUpdateIngredientRow(idx, 'item', e.target.value)}
+                            className="flex-1 bg-[#070e17] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-[#00e5ff]"
+                          />
+                          <input
+                            type="number"
+                            min={1}
+                            placeholder="Soni"
+                            value={ing.count}
+                            onChange={(e) => handleUpdateIngredientRow(idx, 'count', e.target.value)}
+                            className="w-20 bg-[#070e17] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white text-center outline-none"
+                          />
+                          {itemIngredients.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveIngredientRow(idx)}
+                              className="p-1.5 text-red-400 hover:bg-red-500/10 rounded-lg border border-red-500/20"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Attributes Section (Damage, Durability, Health, Hunger, etc.) */}
+                  <div className="bg-[#0b1424] border border-white/10 rounded-xl p-4 space-y-4">
+                    <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                      <span className="text-xs font-bold text-amber-400 flex items-center gap-1.5">
+                        <Sparkles className="w-4 h-4" />
+                        <span>Xususiyatlar & Parametrlar (Attributes)</span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleAddAttributeRow}
+                        className="text-xs text-amber-400 hover:underline flex items-center gap-1 font-bold"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>+ Xususiyat qo'shish</span>
+                      </button>
+                    </div>
+
+                    <div className="space-y-2">
+                      {itemAttributes.map((attr, idx) => (
+                        <div key={idx} className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            placeholder="Xususiyat nomi (masalan: Chidamlilik, Zarar, Kislorod)"
+                            value={attr.key}
+                            onChange={(e) => handleUpdateAttributeRow(idx, 'key', e.target.value)}
+                            className="flex-1 bg-[#070e17] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-amber-400"
+                          />
+                          <input
+                            type="text"
+                            placeholder="Qiymati (masalan: 100 urish, +25 HP, 40 soniya)"
+                            value={attr.value}
+                            onChange={(e) => handleUpdateAttributeRow(idx, 'value', e.target.value)}
+                            className="flex-1 bg-[#070e17] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveAttributeRow(idx)}
+                            className="p-1.5 text-red-400 hover:bg-red-500/10 rounded-lg border border-red-500/20"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Location & Tips */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-bold text-slate-300 block mb-1">Qayerdan Topish Mumkin (Location)</label>
+                      <input
+                        type="text"
+                        placeholder="Masalan: Riflar ostida, Katta orollarda, Bochkalar ichida..."
+                        value={itemLocation}
+                        onChange={(e) => setItemLocation(e.target.value)}
+                        className="w-full bg-[#0b1424] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-300 block mb-1">Maslahatlar & Yo'riqnoma (Tips & Tricks)</label>
+                      <input
+                        type="text"
+                        placeholder="Masalan: Birinchi bo'lib qarmog'ingizni yasang, akuladan ehtiyot bo'ling..."
+                        value={itemTipsUz}
+                        onChange={(e) => setItemTipsUz(e.target.value)}
+                        className="w-full bg-[#0b1424] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Submit Button */}
+                  <div className="flex justify-end pt-2">
+                    <button
+                      type="submit"
+                      className="bg-purple-500 hover:bg-purple-400 text-white font-black text-xs px-6 py-2.5 rounded-xl shadow-lg shadow-purple-500/20 flex items-center gap-2 transition-all"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Fandom Buyumi va Retseptini Saqlash</span>
+                    </button>
+                  </div>
+                </form>
+
+                {/* List of Existing Items in this Game */}
+                <div className="space-y-3">
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wider text-slate-300">
+                    "{itemGame.name}" O'yini Buyumlari ({itemGame.items?.length || 0})
+                  </h4>
+
+                  {itemGame.items && itemGame.items.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {itemGame.items.map((item) => (
+                        <div
+                          key={item.id}
+                          className="bg-[#070e17] border border-white/10 rounded-xl p-3 flex flex-col justify-between gap-3 hover:border-white/20 transition-all"
+                        >
+                          <div className="flex items-start gap-3">
+                            <span className="text-3xl w-12 h-12 flex items-center justify-center bg-white/5 rounded-xl border border-white/10 flex-shrink-0">
+                              {item.icon}
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-sm font-bold text-white">{item.name.uz}</span>
+                                {item.tier && (
+                                  <span className="text-[10px] bg-white/10 text-slate-300 px-1.5 py-0.5 rounded font-bold">
+                                    {item.tier}
+                                  </span>
+                                )}
+                                <span className="text-[10px] font-mono text-[#00e5ff] bg-[#00e5ff]/10 px-1.5 py-0.5 rounded uppercase">
+                                  {item.rarity}
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-slate-400 line-clamp-2 mt-1">
+                                {item.description.uz}
+                              </p>
+
+                              {/* Recipe summary */}
+                              {item.recipe?.ingredients && item.recipe.ingredients.length > 0 && (
+                                <div className="text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-1.5 mt-2">
+                                  🔨 <strong>Retsept:</strong> {item.recipe.ingredients.map(i => `${i.count}x ${i.item}`).join(', ')}
+                                  {item.recipe.station && <span className="text-slate-400"> ({item.recipe.station})</span>}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-end gap-2 pt-2 border-t border-white/5">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (confirm(`"${item.name.uz}" buyumini o'chirishga ishonchingiz komilmi?`)) {
+                                  deleteWikiItem(itemGame.id, item.id);
+                                  showNotification("Buyum o'chirildi.");
+                                }
+                              }}
+                              className="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1 font-bold"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              <span>O'chirish</span>
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-6 text-slate-400 text-xs bg-[#070e17] rounded-xl border border-dashed border-white/10">
+                      Ushbu o'yinda hozircha buyumlar mavjud emas. Yuqoridagi formadan foydalanib birinchi buyumni qo'shing.
+                    </div>
+                  )}
+                </div>
+
+              </div>
+            </div>
+          );
+        })()}
 
       </div>
     </div>

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Game, NewsArticle, Language, LocalizedString, WikiItem } from '../types';
+import { Game, NewsArticle, Language, LocalizedString, WikiItem, WikiCategory } from '../types';
 import { INITIAL_GAMES, INITIAL_NEWS } from '../data/mockData';
 import { translations, attributeTranslations } from '../i18n/translations';
 import { formatEmbedUrl } from '../utils/video';
@@ -27,16 +27,19 @@ interface AppContextType {
   addGame: (newGame: Partial<Game>) => void;
   addNews: (newArticle: Partial<NewsArticle>) => void;
   addWikiItem: (gameId: string, item: WikiItem) => void;
+  addWikiCategory: (gameId: string, category: WikiCategory) => void;
 
   // Update
   updateGame: (id: string, updatedGame: Partial<Game>) => void;
   updateNews: (id: string, updatedNews: Partial<NewsArticle>) => void;
   updateWikiItem: (gameId: string, itemId: string, updatedItem: Partial<WikiItem>) => void;
+  updateWikiCategory: (gameId: string, categoryId: string, updatedCategory: Partial<WikiCategory>) => void;
 
   // Delete
   deleteGame: (id: string) => void;
   deleteNews: (id: string) => void;
   deleteWikiItem: (gameId: string, itemId: string) => void;
+  deleteWikiCategory: (gameId: string, categoryId: string) => void;
 
   // Source Auto-Importer
   importGameFromSource: (sourceUrl: string, gameName?: string) => Promise<{ success: boolean; count: number; message: string }>;
@@ -143,12 +146,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       releaseDateExact: newGame.releaseDateExact || '',
       isUpcoming: newGame.isUpcoming || false,
       overviewArticle: newGame.overviewArticle || newGame.description || { uz: '', ru: '', en: '' },
-      categories: newGame.categories || [
-        { id: 'resources', name: { uz: 'Resurslar & Minerallar', ru: 'Ресурсы и Руды', en: 'Resources & Ores' }, icon: '⛏️' },
-        { id: 'crafting', name: { uz: 'Asboblar & Qurollar', ru: 'Инструменты и Оружие', en: 'Tools & Weapons' }, icon: '⚔️' },
-        { id: 'food', name: { uz: 'Oshpazlik & Taomlar', ru: 'Кулинария и Еда', en: 'Cooking & Food' }, icon: '🍲' },
-        { id: 'locations', name: { uz: 'Xaritalar & Orollar', ru: 'Карты и Локации', en: 'Maps & Locations' }, icon: '🏝️' },
-      ],
+      hasCrafting: newGame.hasCrafting !== undefined ? newGame.hasCrafting : true,
+      categories: newGame.categories && newGame.categories.length > 0 ? newGame.categories : (
+        newGame.hasCrafting !== false ? [
+          { id: 'resources', name: { uz: 'Resurslar & Minerallar', ru: 'Ресурсы и Руды', en: 'Resources & Ores' }, icon: '⛏️' },
+          { id: 'crafting', name: { uz: 'Asboblar & Qurollar', ru: 'Инструменты и Оружие', en: 'Tools & Weapons' }, icon: '⚔️' },
+          { id: 'food', name: { uz: 'Oshpazlik & Taomlar', ru: 'Кулинария и Еда', en: 'Cooking & Food' }, icon: '🍲' },
+          { id: 'locations', name: { uz: 'Xaritalar & Orollar', ru: 'Карты и Локации', en: 'Maps & Locations' }, icon: '🏝️' },
+        ] : [
+          { id: 'maps', name: { uz: 'Xaritalar & Joylar', ru: 'Карты и Локации', en: 'Maps & Locations' }, icon: '🗺️' },
+          { id: 'weapons', name: { uz: 'Qurollar & Ekipirovka', ru: 'Оружие и Снаряжение', en: 'Weapons & Gear' }, icon: '🔫' },
+          { id: 'tactics', name: { uz: 'Taktik Qo\'llanmalar', ru: 'Тактические Гайды', en: 'Tactics & Guides' }, icon: '🎯' },
+        ]
+      ),
       items: newGame.items || [],
     };
 
@@ -324,6 +334,63 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
+  const addWikiCategory = (gameId: string, category: WikiCategory) => {
+    setGames((prev) => {
+      const updated = prev.map((g) => {
+        if (g.id === gameId) {
+          const gameUpdated = {
+            ...g,
+            categories: [...(g.categories || []), category],
+          };
+          if (isFirebaseActive()) {
+            saveGameToFirestore(gameUpdated).catch(console.error);
+          }
+          return gameUpdated;
+        }
+        return g;
+      });
+      return updated;
+    });
+  };
+
+  const updateWikiCategory = (gameId: string, categoryId: string, updatedCategory: Partial<WikiCategory>) => {
+    setGames((prev) => {
+      const updated = prev.map((g) => {
+        if (g.id === gameId) {
+          const gameUpdated = {
+            ...g,
+            categories: (g.categories || []).map((cat) => (cat.id === categoryId ? { ...cat, ...updatedCategory } : cat)),
+          };
+          if (isFirebaseActive()) {
+            saveGameToFirestore(gameUpdated).catch(console.error);
+          }
+          return gameUpdated;
+        }
+        return g;
+      });
+      return updated;
+    });
+  };
+
+  const deleteWikiCategory = (gameId: string, categoryId: string) => {
+    setGames((prev) => {
+      const updated = prev.map((g) => {
+        if (g.id === gameId) {
+          const gameUpdated = {
+            ...g,
+            categories: (g.categories || []).filter((cat) => cat.id !== categoryId),
+          };
+          if (isFirebaseActive()) {
+            saveGameToFirestore(gameUpdated).catch(console.error);
+          }
+          return gameUpdated;
+        }
+        return g;
+      });
+      return updated;
+    });
+  };
+
   // ----------------------------------------------------
   // SMART SOURCE IMPORTER
   // ----------------------------------------------------
@@ -469,12 +536,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addGame,
         addNews,
         addWikiItem,
+        addWikiCategory,
         updateGame,
         updateNews,
         updateWikiItem,
+        updateWikiCategory,
         deleteGame,
         deleteNews,
         deleteWikiItem,
+        deleteWikiCategory,
         importGameFromSource,
         isFirebaseConnected,
         setFirebaseConfig,
